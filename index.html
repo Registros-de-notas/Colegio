@@ -3,10 +3,25 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sistema de Calificaciones — José del Carmen (Admin Total v3)</title>
+<title>Sistema de Calificaciones — José del Carmen (Sincronizado PC/Móvil)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Lato:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Raleway:wght@400;700&family=Poppins:wght@400;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCp94HtEK02gsomSrTOf7mPWbMxU2TqFsg",
+  authDomain: "registro-de-notas-ffb80.firebaseapp.com",
+  projectId: "registro-de-notas-ffb80",
+  storageBucket: "registro-de-notas-ffb80.firebasestorage.app",
+  messagingSenderId: "692873253724",
+  appId: "1:692873253724:web:2edd3423a228319e1ca799"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:Arial,sans-serif;font-size:12px;background:#e8edf5;min-height:100vh;}
@@ -463,6 +478,7 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
         <div class="topbar-code" id="topbarCode"></div>
       </div>
       <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+      <span title="Datos sincronizados entre PC y móvil" style="font-size:10px;color:#7df;opacity:.8;white-space:nowrap;">🔄 Sync activo</span>
     </div>
   </div>
 
@@ -1341,20 +1357,76 @@ window.tableData = [{nombre:'',v:[[null,null,null],[null,null,null],[null,null,n
 let customLogoBase64 = "";
 let customBuildingBase64 = "";
 
-// ── Storage helpers ─────────────────────────────────────────────
-function getNotas(){ try{return JSON.parse(localStorage.getItem(STORE_NOTAS)||'{}');}catch(e){return{};} }
-function setNotas(s){ localStorage.setItem(STORE_NOTAS,JSON.stringify(s)); }
-function getUsers(){ try{return JSON.parse(localStorage.getItem(STORE_USERS)||'[]');}catch(e){return[];} }
-function setUsers(u){ localStorage.setItem(STORE_USERS,JSON.stringify(u)); }
-function getConfig(){ try{return JSON.parse(localStorage.getItem(STORE_CONFIG)||'{}');}catch(e){return{};} }
-function setConfig(c){ localStorage.setItem(STORE_CONFIG,JSON.stringify(c)); }
+// ── Storage helpers — Firebase Firestore Sync ────────────────────
+// Caché en memoria para lecturas síncronas inmediatas.
+const _cache = {};
 
-if(getUsers().length===0){
-  setUsers([
-    {nombre:"Profesor Prueba",codigo:"D001",rol:"docente"},
-    {nombre:"Alumno Prueba",codigo:"A001",rol:"alumno"}
-  ]);
+async function _cloudGet(key, defVal) {
+  try {
+    const doc = await db.collection('datos').doc(key).get();
+    const v = doc.exists ? doc.data().value : defVal;
+    _cache[key] = v;
+    return v;
+  } catch(e) { return _cache[key] !== undefined ? _cache[key] : defVal; }
 }
+async function _cloudSet(key, val) {
+  _cache[key] = val;
+  try { await db.collection('datos').doc(key).set({ value: val, ts: Date.now() }); } catch(e) {}
+}
+
+// Inicialización asíncrona al cargar
+let _storageReady = false;
+async function initStorage() {
+  const keys = [STORE_NOTAS, STORE_USERS, STORE_CONFIG,
+                STORE_MATERIAS, STORE_ASIG, STORE_ASIG_DOCENTE,
+                STORE_ASIST, STORE_LIMITES,
+                'unjfsc_anuncio_v3', 'unjfsc_anuncio2_v3'];
+  const defaults = {
+    [STORE_NOTAS]:{}, [STORE_USERS]:[], [STORE_CONFIG]:{},
+    [STORE_MATERIAS]:[...MATERIAS_DEFAULT],
+    [STORE_ASIG]:{}, [STORE_ASIG_DOCENTE]:{},
+    [STORE_ASIST]:{}, [STORE_LIMITES]:{},
+    'unjfsc_anuncio_v3':{}, 'unjfsc_anuncio2_v3':{}
+  };
+  await Promise.all(keys.map(async k => {
+    try {
+      const doc = await db.collection('datos').doc(k).get();
+      _cache[k] = doc.exists ? doc.data().value : defaults[k];
+    } catch(e) { _cache[k] = defaults[k]; }
+  }));
+  _storageReady = true;
+}
+
+// Escucha cambios en tiempo real desde Firestore
+function startRealtimeSync() {
+  const keys = [STORE_USERS, STORE_NOTAS, STORE_CONFIG,
+                STORE_MATERIAS, STORE_ASIG, STORE_ASIG_DOCENTE,
+                STORE_ASIST, STORE_LIMITES,
+                'unjfsc_anuncio_v3', 'unjfsc_anuncio2_v3'];
+  keys.forEach(k => {
+    db.collection('datos').doc(k).onSnapshot(doc => {
+      if(!_storageReady || !doc.exists) return;
+      const fresh = doc.data().value;
+      if(JSON.stringify(fresh) !== JSON.stringify(_cache[k])) {
+        _cache[k] = fresh;
+        if(k === STORE_USERS) { if(currentMode==='admin') renderUserList(); if(currentMode==='admin2') renderAdmin2UserList(); }
+        if(k === STORE_NOTAS) { if(currentMode==='alumno') renderAlumnoView(); }
+        const flashEl = document.getElementById('flashMsg');
+        if(flashEl && flashEl.style.display==='none') flash('🔄 Sincronizado con otro dispositivo.','#2563b0');
+      }
+    });
+  });
+}
+
+// Funciones síncronas que leen de caché
+function getNotas(){ return _cache[STORE_NOTAS] || {}; }
+function setNotas(s){ _cache[STORE_NOTAS]=s; _cloudSet(STORE_NOTAS,s); }
+function getUsers(){ return _cache[STORE_USERS] || []; }
+function setUsers(u){ _cache[STORE_USERS]=u; _cloudSet(STORE_USERS,u); }
+function getConfig(){ return _cache[STORE_CONFIG] || {}; }
+function setConfig(c){ _cache[STORE_CONFIG]=c; _cloudSet(STORE_CONFIG,c); }
+
+// La siembra inicial se hace en initStorage después de cargar
 
 // getEstadoFechas — compatibilidad legacy: 'vencido' si todos los módulos vencidos, 'abierto' si alguno abierto, 'libre' si todos libres
 function getEstadoFechas(){
@@ -2499,14 +2571,14 @@ const STORE_ASIG     = 'unjfsc_asig_v3';      // {alumnoCodigo: [materia,...]}
 const STORE_ASIST    = 'unjfsc_asist_v3';      // {key:"docenteCod__alumnoCod__materia__fecha": estado}
 const STORE_ASIG_DOCENTE = 'unjfsc_asig_docente_v3'; // {docenteCodigo: [{gradoSeccion, materias:[...]}]}
 
-function getMaterias(){ try{const v=localStorage.getItem(STORE_MATERIAS);return v?JSON.parse(v):[...MATERIAS_DEFAULT];}catch(e){return[...MATERIAS_DEFAULT];} }
-function setMaterias(m){ localStorage.setItem(STORE_MATERIAS,JSON.stringify(m)); }
-function getAsig(){ try{return JSON.parse(localStorage.getItem(STORE_ASIG)||'{}');}catch(e){return{};} }
-function setAsig(a){ localStorage.setItem(STORE_ASIG,JSON.stringify(a)); }
-function getAsigDocente(){ try{return JSON.parse(localStorage.getItem(STORE_ASIG_DOCENTE)||'{}');}catch(e){return{};} }
-function setAsigDocente(a){ localStorage.setItem(STORE_ASIG_DOCENTE,JSON.stringify(a)); }
-function getAsist(){ try{return JSON.parse(localStorage.getItem(STORE_ASIST)||'{}');}catch(e){return{};} }
-function setAsist(a){ localStorage.setItem(STORE_ASIST,JSON.stringify(a)); }
+function getMaterias(){ return _cache[STORE_MATERIAS] || [...MATERIAS_DEFAULT]; }
+function setMaterias(m){ _cache[STORE_MATERIAS]=m; _cloudSet(STORE_MATERIAS,m); }
+function getAsig(){ return _cache[STORE_ASIG] || {}; }
+function setAsig(a){ _cache[STORE_ASIG]=a; _cloudSet(STORE_ASIG,a); }
+function getAsigDocente(){ return _cache[STORE_ASIG_DOCENTE] || {}; }
+function setAsigDocente(a){ _cache[STORE_ASIG_DOCENTE]=a; _cloudSet(STORE_ASIG_DOCENTE,a); }
+function getAsist(){ return _cache[STORE_ASIST] || {}; }
+function setAsist(a){ _cache[STORE_ASIST]=a; _cloudSet(STORE_ASIST,a); }
 
 function renderMaterias(){
   const m=getMaterias();
@@ -2994,8 +3066,8 @@ const _origRenderAlumnoView = typeof renderAlumnoView === 'function' ? renderAlu
 // ══════════════════════════════════════════════════════════
 const STORE_LIMITES = 'unjfsc_limites_v3';
 // {docentes:{[cod]:{maxGrados:3}}, alumnos:{[cod]:{maxMaterias:20}}}
-function getLimites(){ try{return JSON.parse(localStorage.getItem(STORE_LIMITES)||'{}');}catch(e){return{};} }
-function setLimites(l){ localStorage.setItem(STORE_LIMITES,JSON.stringify(l)); }
+function getLimites(){ return _cache[STORE_LIMITES] || {}; }
+function setLimites(l){ _cache[STORE_LIMITES]=l; _cloudSet(STORE_LIMITES,l); }
 function getMaxGradosDocente(cod){ const l=getLimites(); return (l.docentes&&l.docentes[cod]&&l.docentes[cod].maxGrados!=null)?l.docentes[cod].maxGrados:3; }
 function getMaxMateriasAlumno(cod){ const l=getLimites(); return (l.alumnos&&l.alumnos[cod]&&l.alumnos[cod].maxMaterias!=null)?l.alumnos[cod].maxMaterias:20; }
 
@@ -3207,10 +3279,10 @@ function eliminarNota(key){
 const STORE_ANUNCIO = 'unjfsc_anuncio_v3';
 
 function getAnuncio(){
-  try{return JSON.parse(localStorage.getItem(STORE_ANUNCIO)||'{}');}catch(e){return{};}
+  return _cache['unjfsc_anuncio_v3'] || {};
 }
 function setAnuncio(a){
-  localStorage.setItem(STORE_ANUNCIO, JSON.stringify(a));
+  _cache['unjfsc_anuncio_v3']=a; _cloudSet('unjfsc_anuncio_v3',a);
 }
 
 function saveAnuncioConfig(){
@@ -3374,10 +3446,10 @@ function cerrarAnuncio(){
 const STORE_ANUNCIO2 = 'unjfsc_anuncio2_v3';
 
 function getAnuncio2(){
-  try{return JSON.parse(localStorage.getItem(STORE_ANUNCIO2)||'{}');}catch(e){return{};}
+  return _cache['unjfsc_anuncio2_v3'] || {};
 }
 function setAnuncio2(a){
-  localStorage.setItem(STORE_ANUNCIO2, JSON.stringify(a));
+  _cache['unjfsc_anuncio2_v3']=a; _cloudSet('unjfsc_anuncio2_v3',a);
 }
 
 function saveAnuncio2Config(){
@@ -3514,14 +3586,37 @@ function anuncioSubTab(n){
   document.getElementById('anTabBtn2').classList.toggle('active', n===2);
 }
 
-window.onload=function(){
+window.onload=async function(){
+  // Mostrar pantalla de carga mientras se inicializa el storage compartido
+  const overlay = document.getElementById('loginOverlay');
+  const loadMsg = document.createElement('div');
+  loadMsg.id = 'storageLoadMsg';
+  loadMsg.style.cssText = 'position:fixed;inset:0;background:#e8edf5;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;';
+  loadMsg.innerHTML = '<div style="font-size:32px;">⏳</div><div style="font-size:14px;font-weight:700;color:#1a3a6b;">Conectando con la base de datos compartida...</div><div style="font-size:11px;color:#888;">Los datos se sincronizan entre PC y móvil</div>';
+  document.body.appendChild(loadMsg);
+
+  await initStorage();
+
+  // Sembrar usuarios iniciales solo si la BD está vacía
+  if(getUsers().length===0){
+    setUsers([
+      {nombre:"Profesor Prueba",codigo:"D001",rol:"docente"},
+      {nombre:"Alumno Prueba",codigo:"A001",rol:"alumno"}
+    ]);
+  }
+
+  loadMsg.remove();
   applyDynamicTexts();
   setTimeout(initDragAndDrop,200);
+
   // set today on date fields
   const hoy=todayStr();
   ['docenteAsistFecha','adminAsistFecha','a2AsistFecha'].forEach(id=>{
     const el=document.getElementById(id); if(el&&!el.value) el.value=hoy;
   });
+
+  // Iniciar sincronización en tiempo real con Firebase
+  startRealtimeSync();
 };
 </script>
 </body>
