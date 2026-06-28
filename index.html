@@ -384,6 +384,16 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
   </div>
 </div>
 
+<!-- ANUNCIO 3 OVERLAY — Para docentes con notas pendientes vencidas -->
+<div id="anuncio3Overlay" style="display:none;position:fixed;inset:0;z-index:10001;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);background:rgba(0,0,0,0.6);">
+  <div id="anuncio3Box" style="position:relative;max-width:420px;width:92%;border-radius:14px;padding:32px 28px;text-align:center;background:#7a1a1a;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+    <div id="anuncio3Icon" style="font-size:42px;margin-bottom:10px;">⚠️</div>
+    <div id="anuncio3Title" style="font-size:16px;font-weight:900;color:#fff;margin-bottom:10px;">Fecha límite vencida</div>
+    <div id="anuncio3Body" style="font-size:12px;color:#ffd0d0;margin-bottom:16px;line-height:1.6;">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</div>
+    <button onclick="cerrarAnuncio3()" style="padding:8px 24px;border-radius:16px;border:none;background:#f4c430;color:#1a3a6b;font-weight:700;font-size:13px;cursor:pointer;">Entendido</button>
+  </div>
+</div>
+
 
 <!-- LOGIN — layout de posicionamiento absoluto sincronizado con el editor DnD -->
 <div id="loginOverlay">
@@ -970,7 +980,8 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
 
         <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:2px solid #1a3a6b;">
           <button class="admin-tab active" id="anTabBtn1" onclick="anuncioSubTab(1)">📢 Anuncio 1 (Evaluación)</button>
-          <button class="admin-tab" id="anTabBtn2" onclick="anuncioSubTab(2)">💰 Anuncio 2 (Personalizado)</button>
+          <button class="admin-tab" id="anTabBtn2" onclick="anuncioSubTab(2)">💰 Anuncio 2 (Pago)</button>
+          <button class="admin-tab" id="anTabBtn3" onclick="anuncioSubTab(3)">⚠️ Anuncio 3 (Docentes)</button>
         </div>
 
         <!-- ANUNCIO 1 -->
@@ -1134,6 +1145,48 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
             </div>
           </div>
         </div>
+        <!-- Selector de alumnos para Anuncio 2 -->
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 14px;margin-top:12px;">
+          <div style="font-weight:700;color:#7a5a00;font-size:12px;margin-bottom:8px;">👥 Seleccionar alumnos que verán el Anuncio 2</div>
+          <div style="font-size:11px;color:#7a5a00;margin-bottom:8px;">Solo los alumnos marcados verán el aviso de pago al iniciar sesión.</div>
+          <div id="anuncio2AlumnoList" style="max-height:180px;overflow-y:auto;border:1px solid #e0d0a0;border-radius:6px;background:#fffdf0;padding:8px;"></div>
+          <button class="btn-sm green" style="margin-top:8px;" onclick="saveAnuncio2Alumnos(); flash('✅ Alumnos actualizados.','#1a6b3a')">💾 Guardar selección</button>
+        </div>
+        </div>
+
+        <!-- ANUNCIO 3 — Para docentes, editable por Admin2 -->
+        <div id="anuncioSub3" style="display:none;">
+        <div style="background:#f4f7fc;border:1px solid #d0daea;border-radius:8px;padding:14px;margin-bottom:12px;">
+          <div style="font-weight:700;color:#1a3a6b;font-size:12px;margin-bottom:10px;border-bottom:1px solid #d0daea;padding-bottom:6px;">⚙️ Configuración del Anuncio 3 (Para Docentes)</div>
+          <div style="font-size:11px;color:#666;margin-bottom:10px;background:#e8f0fe;padding:8px;border-radius:6px;">
+            ⚠️ Este anuncio aparece automáticamente al docente cuando vence la fecha límite de un módulo y aún no ha registrado las notas de todos sus alumnos asignados.
+          </div>
+          <div class="anuncio-config-grid">
+            <label>🔘 Activar:</label>
+            <label style="display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;">
+              <input type="checkbox" id="anuncio3Activo" style="width:16px;height:16px;cursor:pointer;"/> Anuncio activo
+            </label>
+            <label>💬 Icono:</label>
+            <input type="text" id="anuncio3IconInput" class="ug-input" value="⚠️"/>
+            <label>📌 Título:</label>
+            <textarea id="anuncio3TitleInput" class="ug-input" style="height:50px;">Fecha límite vencida</textarea>
+            <label>📝 Mensaje:</label>
+            <textarea id="anuncio3CuerpoInput" class="ug-input" style="height:70px;">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</textarea>
+            <label>🎨 Color fondo:</label>
+            <input type="color" id="anuncio3BgColor" value="#7a1a1a"/>
+            <label>🖋️ Color título:</label>
+            <input type="color" id="anuncio3TitleColor" value="#ffffff"/>
+            <label>🖋️ Color mensaje:</label>
+            <input type="color" id="anuncio3BodyColor" value="#ffd0d0"/>
+          </div>
+          <button class="btn-sm green" style="margin-top:10px;" onclick="saveAnuncio3Config(); flash('✅ Anuncio 3 guardado.','#1a6b3a')">💾 Guardar Anuncio 3</button>
+        </div>
+        <div style="font-size:11px;color:#666;background:#f8f9fa;padding:8px 10px;border-radius:6px;line-height:1.6;">
+          <strong>📋 Cómo funciona el Anuncio 3:</strong><br>
+          • Aparece al <strong>docente</strong> al iniciar sesión cuando hay un módulo cuya fecha límite ya venció y el docente aún no registró las notas de algún alumno asignado.<br>
+          • Se puede editar desde el panel de <strong>Admin2</strong> también.<br>
+          • El docente puede cerrarlo con "Entendido" pero le volverá a aparecer en la próxima sesión mientras no registre las notas.
+        </div>
         </div>
       </div>
     </div>
@@ -1147,6 +1200,7 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
         <button class="admin2-tab" onclick="admin2Tab('fechas')" id="a2tFechas">📅 Fechas</button>
         <button class="admin2-tab" onclick="admin2Tab('a2materias')" id="a2tMaterias">📚 Materias</button>
         <button class="admin2-tab" onclick="admin2Tab('a2asistencia')" id="a2tAsistencia">📋 Asistencia</button>
+        <button class="admin2-tab" onclick="admin2Tab('a2anuncio3')" id="a2tAnuncio3">⚠️ Anuncio Docentes</button>
       </div>
 
       <!-- Tab2: usuarios -->
@@ -1287,6 +1341,33 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
         </div>
         <div id="a2AsistTabla"></div>
       </div>
+
+      <!-- Tab Anuncio 3 para Admin2 -->
+      <div id="tab2A2anuncio3" class="admin2-panel-card" style="display:none;">
+        <div class="panel-title">⚠️ Anuncio para Docentes</div>
+        <div style="font-size:11px;color:#666;margin-bottom:10px;background:#e8f0fe;padding:8px;border-radius:6px;">
+          Este anuncio aparece al docente cuando vence la fecha límite de un módulo y aún no registró todas las notas.
+        </div>
+        <div class="anuncio-config-grid">
+          <label>🔘 Activar:</label>
+          <label style="display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;">
+            <input type="checkbox" id="a2anuncio3Activo" style="width:16px;height:16px;cursor:pointer;"/> Anuncio activo
+          </label>
+          <label>💬 Icono:</label>
+          <input type="text" id="a2anuncio3IconInput" class="ug-input" value="⚠️"/>
+          <label>📌 Título:</label>
+          <textarea id="a2anuncio3TitleInput" class="ug-input" style="height:50px;">Fecha límite vencida</textarea>
+          <label>📝 Mensaje:</label>
+          <textarea id="a2anuncio3CuerpoInput" class="ug-input" style="height:70px;">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</textarea>
+          <label>🎨 Color fondo:</label>
+          <input type="color" id="a2anuncio3BgColor" value="#7a1a1a"/>
+          <label>🖋️ Color título:</label>
+          <input type="color" id="a2anuncio3TitleColor" value="#ffffff"/>
+          <label>🖋️ Color mensaje:</label>
+          <input type="color" id="a2anuncio3BodyColor" value="#ffd0d0"/>
+        </div>
+        <button class="btn-sm green" style="margin-top:10px;" onclick="saveAnuncio3Config(); flash('✅ Anuncio 3 guardado.','#1a6b3a')">💾 Guardar Anuncio 3</button>
+      </div>
     </div>
 
     <!-- PANEL DOCENTE -->
@@ -1392,13 +1473,15 @@ async function initStorage() {
   const keys = [STORE_NOTAS, STORE_USERS, STORE_CONFIG,
                 STORE_MATERIAS, STORE_ASIG, STORE_ASIG_DOCENTE,
                 STORE_ASIST, STORE_LIMITES,
-                'unjfsc_anuncio_v3', 'unjfsc_anuncio2_v3'];
+                'unjfsc_anuncio_v3', 'unjfsc_anuncio2_v3',
+                'unjfsc_anuncio2_alumnos', 'unjfsc_anuncio3_v1'];
   const defaults = {
     [STORE_NOTAS]:{}, [STORE_USERS]:[], [STORE_CONFIG]:{},
     [STORE_MATERIAS]:[...MATERIAS_DEFAULT],
     [STORE_ASIG]:{}, [STORE_ASIG_DOCENTE]:{},
     [STORE_ASIST]:{}, [STORE_LIMITES]:{},
-    'unjfsc_anuncio_v3':{}, 'unjfsc_anuncio2_v3':{}
+    'unjfsc_anuncio_v3':{}, 'unjfsc_anuncio2_v3':{},
+    'unjfsc_anuncio2_alumnos':[], 'unjfsc_anuncio3_v1':{}
   };
   await Promise.all(keys.map(async k => {
     try {
@@ -1650,6 +1733,7 @@ function openApp(){
   } else if(currentMode==='docente'){
     document.getElementById('docentePanel').style.display='block';
     populateDocenteSelect(); docenteSelAlumno(); renderDocenteStatus();
+    setTimeout(()=>mostrarAnuncio3SiCorresponde(), 800);
   } else if(currentMode==='alumno'){
     document.getElementById('alumnoViewPanel').style.display='block';
     // Cada inicio de sesión es una sesión nueva: los anuncios deben poder volver a salir.
@@ -3617,12 +3701,157 @@ function actualizarBlurApp(){
   if(appEl) appEl.classList.toggle('anuncio-blur', !!(o1||o2));
 }
 
-// Sub-pestañas del panel "Anuncio" (admin): Anuncio 1 / Anuncio 2
+// Sub-pestañas del panel "Anuncio" (admin): Anuncio 1 / Anuncio 2 / Anuncio 3
 function anuncioSubTab(n){
   document.getElementById('anuncioSub1').style.display = n===1?'block':'none';
   document.getElementById('anuncioSub2').style.display = n===2?'block':'none';
+  document.getElementById('anuncioSub3').style.display = n===3?'block':'none';
   document.getElementById('anTabBtn1').classList.toggle('active', n===1);
   document.getElementById('anTabBtn2').classList.toggle('active', n===2);
+  document.getElementById('anTabBtn3').classList.toggle('active', n===3);
+  if(n===2) renderAnuncio2AlumnoList();
+  if(n===3) loadAnuncio3Config('admin');
+}
+
+// ── ANUNCIO 2 — Selección por alumno ────────────────────────────
+function getAnuncio2Alumnos(){ return _cache['unjfsc_anuncio2_alumnos'] || []; }
+function setAnuncio2Alumnos(a){ _cache['unjfsc_anuncio2_alumnos']=a; _cloudSet('unjfsc_anuncio2_alumnos',a); }
+
+function renderAnuncio2AlumnoList(){
+  const users = getUsers().filter(u=>u.rol==='alumno');
+  const sel = getAnuncio2Alumnos();
+  const container = document.getElementById('anuncio2AlumnoList');
+  if(!container) return;
+  if(users.length===0){ container.innerHTML='<div style="color:#888;font-size:11px;padding:6px;">No hay alumnos registrados.</div>'; return; }
+  container.innerHTML = users.map(u=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;">
+      <input type="checkbox" value="${u.codigo}" ${sel.includes(u.codigo)?'checked':''} style="width:14px;height:14px;"/>
+      <strong>${u.nombre}</strong> <span style="color:#888;">(${u.codigo})</span>
+    </label>
+  `).join('');
+}
+
+function saveAnuncio2Alumnos(){
+  const container = document.getElementById('anuncio2AlumnoList');
+  if(!container) return;
+  const checked = [...container.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value);
+  setAnuncio2Alumnos(checked);
+}
+
+// Override debeVerAnuncio2 to check per-alumno selection
+function debeVerAnuncio2(){
+  const a=getAnuncio2();
+  if(!a.activo) return false;
+  // Check if this alumno is in the selected list
+  const sel = getAnuncio2Alumnos();
+  if(sel.length > 0 && currentUser && currentUser.codigo){
+    return sel.includes(currentUser.codigo);
+  }
+  // If no alumnos selected, show to all (backward compat)
+  return true;
+}
+
+// ── ANUNCIO 3 — Para docentes con notas vencidas ─────────────────
+const STORE_ANUNCIO3 = 'unjfsc_anuncio3_v1';
+function getAnuncio3(){ return _cache[STORE_ANUNCIO3] || {}; }
+function setAnuncio3(a){ _cache[STORE_ANUNCIO3]=a; _cloudSet(STORE_ANUNCIO3,a); }
+
+function saveAnuncio3Config(){
+  // Read from whichever panel is visible (admin or admin2)
+  const activo = document.getElementById('anuncio3Activo')?.checked || document.getElementById('a2anuncio3Activo')?.checked || false;
+  const icono = document.getElementById('anuncio3IconInput')?.value || document.getElementById('a2anuncio3IconInput')?.value || '⚠️';
+  const titulo = document.getElementById('anuncio3TitleInput')?.value || document.getElementById('a2anuncio3TitleInput')?.value || '';
+  const cuerpo = document.getElementById('anuncio3CuerpoInput')?.value || document.getElementById('a2anuncio3CuerpoInput')?.value || '';
+  const bgColor = document.getElementById('anuncio3BgColor')?.value || document.getElementById('a2anuncio3BgColor')?.value || '#7a1a1a';
+  const titleColor = document.getElementById('anuncio3TitleColor')?.value || document.getElementById('a2anuncio3TitleColor')?.value || '#ffffff';
+  const bodyColor = document.getElementById('anuncio3BodyColor')?.value || document.getElementById('a2anuncio3BodyColor')?.value || '#ffd0d0';
+  setAnuncio3({activo, icono, titulo, cuerpo, bgColor, titleColor, bodyColor});
+  // Sync both panels
+  loadAnuncio3Config('all');
+}
+
+function loadAnuncio3Config(source){
+  const a = getAnuncio3();
+  const pairs = source==='all' ? ['admin','admin2'] : [source];
+  pairs.forEach(src=>{
+    const prefix = src==='admin2' ? 'a2' : '';
+    const el = (id) => document.getElementById(prefix+'anuncio3'+id);
+    if(el('Activo')) el('Activo').checked = a.activo||false;
+    if(el('IconInput')) el('IconInput').value = a.icono||'⚠️';
+    if(el('TitleInput')) el('TitleInput').value = a.titulo||'Fecha límite vencida';
+    if(el('CuerpoInput')) el('CuerpoInput').value = a.cuerpo||'La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.';
+    if(el('BgColor')) el('BgColor').value = a.bgColor||'#7a1a1a';
+    if(el('TitleColor')) el('TitleColor').value = a.titleColor||'#ffffff';
+    if(el('BodyColor')) el('BodyColor').value = a.bodyColor||'#ffd0d0';
+  });
+}
+
+function docenteTieneNotasVencidas(){
+  // Check if any module is vencido and docente has alumnos without notas in that module
+  const asigD = getAsigDocente();
+  const myAsig = asigD[currentUser?.codigo];
+  if(!myAsig || !myAsig.grados || myAsig.grados.length===0) return false;
+  const notas = getNotas();
+  const users = getUsers();
+  let hayVencido = false;
+  [0,1,2,3].forEach(modIdx=>{
+    if(getEstadoModulo(modIdx)!=='vencido') return;
+    // Get alumnos this docente should have graded
+    myAsig.grados.forEach(gs=>{
+      const alumnos = users.filter(u=>u.rol==='alumno' && u.gradoSeccion===gs);
+      const materias = myAsig.materias||[];
+      alumnos.forEach(al=>{
+        materias.forEach(mat=>{
+          const k = currentUser.codigo+'__'+al.codigo+'__'+mat;
+          const entrada = notas[k];
+          if(!entrada) { hayVencido=true; return; }
+          const v = entrada.tableData?.[0]?.v?.[modIdx];
+          if(!v || v.every(x=>x===null||x===undefined)) hayVencido=true;
+        });
+      });
+    });
+  });
+  return hayVencido;
+}
+
+function mostrarAnuncio3SiCorresponde(){
+  const a = getAnuncio3();
+  if(!a.activo) return;
+  if(currentMode!=='docente') return;
+  if(!docenteTieneNotasVencidas()) return;
+  const box = document.getElementById('anuncio3Box');
+  box.style.background = a.bgColor||'#7a1a1a';
+  document.getElementById('anuncio3Icon').textContent = a.icono||'⚠️';
+  document.getElementById('anuncio3Title').style.color = a.titleColor||'#fff';
+  document.getElementById('anuncio3Title').textContent = a.titulo||'Fecha límite vencida';
+  document.getElementById('anuncio3Body').style.color = a.bodyColor||'#ffd0d0';
+  document.getElementById('anuncio3Body').textContent = a.cuerpo||'La fecha límite para registrar notas ha vencido.';
+  document.getElementById('anuncio3Overlay').style.display = 'flex';
+}
+
+function cerrarAnuncio3(){
+  document.getElementById('anuncio3Overlay').style.display = 'none';
+}
+
+// Add admin2 tab routing for anuncio3
+const _origAdmin2Tab = admin2Tab;
+function admin2Tab(tab){
+  const a2Tabs=['usuarios','notas','fechas','a2materias','a2asistencia','a2anuncio3'];
+  a2Tabs.forEach(t=>{
+    const tName = t==='a2materias'?'Materias':t==='a2asistencia'?'Asistencia':t==='a2anuncio3'?'Anuncio3':t;
+    const btnId='a2t'+tName.charAt(0).toUpperCase()+tName.slice(1);
+    const panId='tab2'+( t==='a2materias'?'A2materias':t==='a2asistencia'?'A2asistencia':t==='a2anuncio3'?'A2anuncio3':tName.charAt(0).toUpperCase()+tName.slice(1));
+    const btn=document.getElementById(btnId);
+    const pan=document.getElementById(panId);
+    if(btn) btn.classList.toggle('active',t===tab);
+    if(pan) pan.style.display=t===tab?'block':'none';
+  });
+  if(tab==='usuarios'){toggleDocenteAsigBlock('a2nu');}
+  if(tab==='notas'){refreshAdmin2Notas();refreshAdmin2Filter();}
+  if(tab==='fechas'){renderFechasModulosAdmin2Panel();}
+  if(tab==='a2materias'){a2asigNivelChange(); renderA2AsigPanel();}
+  if(tab==='a2asistencia'){a2AsistNivelChange();}
+  if(tab==='a2anuncio3'){loadAnuncio3Config('admin2');}
 }
 
 window.onload=async function(){
