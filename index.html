@@ -206,7 +206,7 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
   table.main{min-width:600px;}
   /* Login responsive — convertimos el layout absoluto (pensado para escritorio)
      en un flujo normal de columna, cómodo y tocable en móvil. */
-  #loginOverlay{padding:14px 0;align-items:flex-start;}
+  #loginOverlay{padding:14px 0;align-items:center;justify-content:center;}
   #mainLoginOuter{
     width:94vw!important;max-width:380px!important;height:auto!important;min-height:0!important;
     display:flex!important;flex-direction:column!important;
@@ -1643,6 +1643,8 @@ function openApp(){
     // Cada inicio de sesión es una sesión nueva: los anuncios deben poder volver a salir.
     anuncio1CerradoSesion=false; anuncio2CerradoSesion=false;
     renderAlumnoView();
+    // Re-render después de un momento para asegurar que Firebase cargó todos los datos
+    setTimeout(()=>renderAlumnoView(), 1500);
     // Show announcement if active
     setTimeout(()=>mostrarAnuncioSiCorresponde(false), 300);
   }
