@@ -1812,25 +1812,39 @@ function buildNotasRows(items, p, isAdmin2){
 }
 
 function refreshAdminNotas(){
-  const n=getNotas(); const filter=document.getElementById('filterDocente').value; const p=getPcts();
-  const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
-  document.getElementById('adminNotasBody').innerHTML=buildNotasRows(items,p,false);
-  // banner estado
-  const banner=document.getElementById('globalLockBanner');
-  const estado=getEstadoFechas();
-  if(estado==='vencido'){
-    banner.style.display='block';
-    banner.innerHTML='<div class="banner-vencido">⛔ Fecha límite vencida. Las notas están bloqueadas globalmente. Solo tú (Admin Principal) puedes forzar la apertura en la pestaña Fechas.</div>';
-  } else { banner.style.display='none'; }
+  // Recargar notas desde Firebase antes de mostrar
+  db.collection('datos').doc(STORE_NOTAS).get().then(doc=>{
+    if(doc.exists) _cache[STORE_NOTAS] = doc.data().value;
+    const n=getNotas(); const filter=document.getElementById('filterDocente').value; const p=getPcts();
+    const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
+    document.getElementById('adminNotasBody').innerHTML=buildNotasRows(items,p,false);
+    const banner=document.getElementById('globalLockBanner');
+    const estado=getEstadoFechas();
+    if(estado==='vencido'){
+      banner.style.display='block';
+      banner.innerHTML='<div class="banner-vencido">⛔ Fecha límite vencida. Las notas están bloqueadas globalmente. Solo tú (Admin Principal) puedes forzar la apertura en la pestaña Fechas.</div>';
+    } else { banner.style.display='none'; }
+  }).catch(()=>{
+    const n=getNotas(); const filter=document.getElementById('filterDocente').value; const p=getPcts();
+    const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
+    document.getElementById('adminNotasBody').innerHTML=buildNotasRows(items,p,false);
+  });
 }
 function refreshAdmin2Notas(){
-  const n=getNotas(); const filter=document.getElementById('a2filterDocente').value; const p=getPcts();
-  const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
-  document.getElementById('a2adminNotasBody').innerHTML=buildNotasRows(items,p,true);
-  const warn=document.getElementById('a2lockWarning');
-  const estado=getEstadoFechas();
-  if(estado==='vencido'){warn.textContent='⛔ Fecha límite vencida. No puedes modificar el estado de las notas. Contacta al Administrador Principal.';}
-  else {warn.textContent='';}
+  db.collection('datos').doc(STORE_NOTAS).get().then(doc=>{
+    if(doc.exists) _cache[STORE_NOTAS] = doc.data().value;
+    const n=getNotas(); const filter=document.getElementById('a2filterDocente').value; const p=getPcts();
+    const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
+    document.getElementById('a2adminNotasBody').innerHTML=buildNotasRows(items,p,true);
+    const warn=document.getElementById('a2lockWarning');
+    const estado=getEstadoFechas();
+    if(estado==='vencido'){warn.textContent='⛔ Fecha límite vencida. No puedes modificar el estado de las notas. Contacta al Administrador Principal.';}
+    else {warn.textContent='';}
+  }).catch(()=>{
+    const n=getNotas(); const filter=document.getElementById('a2filterDocente').value; const p=getPcts();
+    const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
+    document.getElementById('a2adminNotasBody').innerHTML=buildNotasRows(items,p,true);
+  });
 }
 function toggleLock(k,l){
   const n=getNotas(); if(n[k]){n[k].locked=l;setNotas(n);refreshAdminNotas();}
