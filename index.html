@@ -1156,36 +1156,53 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
 
         <!-- ANUNCIO 3 — Para docentes, editable por Admin2 -->
         <div id="anuncioSub3" style="display:none;">
-        <div style="background:#f4f7fc;border:1px solid #d0daea;border-radius:8px;padding:14px;margin-bottom:12px;">
-          <div style="font-weight:700;color:#1a3a6b;font-size:12px;margin-bottom:10px;border-bottom:1px solid #d0daea;padding-bottom:6px;">⚙️ Configuración del Anuncio 3 (Para Docentes)</div>
-          <div style="font-size:11px;color:#666;margin-bottom:10px;background:#e8f0fe;padding:8px;border-radius:6px;">
-            ⚠️ Este anuncio aparece automáticamente al docente cuando vence la fecha límite de un módulo y aún no ha registrado las notas de todos sus alumnos asignados.
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;" id="anuncio3ConfigGrid">
+          <!-- Columna izquierda: configuración -->
+          <div style="background:#f4f7fc;border:1px solid #d0daea;border-radius:8px;padding:14px;">
+            <div style="font-weight:700;color:#1a3a6b;font-size:12px;margin-bottom:10px;border-bottom:1px solid #d0daea;padding-bottom:6px;">⚙️ Configuración del Anuncio 3 (Para Docentes)</div>
+            <div style="font-size:11px;color:#666;margin-bottom:10px;background:#e8f0fe;padding:8px;border-radius:6px;">
+              ⚠️ Este anuncio aparece automáticamente al docente cuando vence la fecha límite de un módulo y aún no ha registrado las notas de todos sus alumnos asignados.
+            </div>
+            <div class="anuncio-config-grid">
+              <label>🔘 Activar:</label>
+              <label style="display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;">
+                <input type="checkbox" id="anuncio3Activo" onchange="saveAnuncio3Config()" style="width:16px;height:16px;cursor:pointer;"/> Anuncio activo
+              </label>
+              <label>💬 Icono:</label>
+              <input type="text" id="anuncio3IconInput" class="ug-input" value="⚠️" oninput="saveAnuncio3Config()"/>
+              <label>📌 Título:</label>
+              <textarea id="anuncio3TitleInput" class="ug-input" style="height:50px;" oninput="saveAnuncio3Config()">Fecha límite vencida</textarea>
+              <label>📝 Mensaje:</label>
+              <textarea id="anuncio3CuerpoInput" class="ug-input" style="height:70px;" oninput="saveAnuncio3Config()">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</textarea>
+              <label>🎨 Color fondo:</label>
+              <input type="color" id="anuncio3BgColor" value="#7a1a1a" oninput="saveAnuncio3Config()"/>
+              <label>🖋️ Color título:</label>
+              <input type="color" id="anuncio3TitleColor" value="#ffffff" oninput="saveAnuncio3Config()"/>
+              <label>🖋️ Color mensaje:</label>
+              <input type="color" id="anuncio3BodyColor" value="#ffd0d0" oninput="saveAnuncio3Config()"/>
+            </div>
+            <button class="btn-sm green" style="margin-top:10px;" onclick="saveAnuncio3Config(); flash('✅ Anuncio 3 guardado.','#1a6b3a')">💾 Guardar Anuncio 3</button>
+            <button class="btn-sm orange" style="margin-top:10px;margin-left:6px;" onclick="previewAnuncio3Admin()">👁️ Previsualizar</button>
           </div>
-          <div class="anuncio-config-grid">
-            <label>🔘 Activar:</label>
-            <label style="display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;">
-              <input type="checkbox" id="anuncio3Activo" style="width:16px;height:16px;cursor:pointer;"/> Anuncio activo
-            </label>
-            <label>💬 Icono:</label>
-            <input type="text" id="anuncio3IconInput" class="ug-input" value="⚠️"/>
-            <label>📌 Título:</label>
-            <textarea id="anuncio3TitleInput" class="ug-input" style="height:50px;">Fecha límite vencida</textarea>
-            <label>📝 Mensaje:</label>
-            <textarea id="anuncio3CuerpoInput" class="ug-input" style="height:70px;">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</textarea>
-            <label>🎨 Color fondo:</label>
-            <input type="color" id="anuncio3BgColor" value="#7a1a1a"/>
-            <label>🖋️ Color título:</label>
-            <input type="color" id="anuncio3TitleColor" value="#ffffff"/>
-            <label>🖋️ Color mensaje:</label>
-            <input type="color" id="anuncio3BodyColor" value="#ffd0d0"/>
+
+          <!-- Columna derecha: preview -->
+          <div>
+            <div style="font-weight:700;color:#1a3a6b;font-size:12px;margin-bottom:10px;">👁️ Vista previa</div>
+            <div id="anuncio3PreviewBox" class="anuncio-preview-box">
+              <div class="anuncio-preview-inner">
+                <div id="anuncio3PreviewIcon" style="font-size:36px;margin-bottom:8px;">⚠️</div>
+                <div id="anuncio3PreviewTitle" style="font-size:14px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.35;">Fecha límite vencida</div>
+                <div id="anuncio3PreviewBody" style="font-size:12px;color:#ffd0d0;margin-bottom:12px;line-height:1.5;">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</div>
+                <button style="padding:6px 20px;border-radius:16px;border:none;background:#f4c430;color:#7a1a1a;font-weight:700;font-size:12px;cursor:pointer;">Entendido</button>
+              </div>
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:#666;background:#f8f9fa;padding:8px 10px;border-radius:6px;line-height:1.6;">
+              <strong>📋 Cómo funciona el Anuncio 3:</strong><br>
+              • Aparece al <strong>docente</strong> al iniciar sesión cuando hay un módulo cuya fecha límite ya venció y el docente aún no registró las notas de algún alumno asignado.<br>
+              • Se puede editar desde el panel de <strong>Admin2</strong> también.<br>
+              • El docente puede cerrarlo con "Entendido" pero le volverá a aparecer en la próxima sesión mientras no registre las notas.
+            </div>
           </div>
-          <button class="btn-sm green" style="margin-top:10px;" onclick="saveAnuncio3Config(); flash('✅ Anuncio 3 guardado.','#1a6b3a')">💾 Guardar Anuncio 3</button>
-        </div>
-        <div style="font-size:11px;color:#666;background:#f8f9fa;padding:8px 10px;border-radius:6px;line-height:1.6;">
-          <strong>📋 Cómo funciona el Anuncio 3:</strong><br>
-          • Aparece al <strong>docente</strong> al iniciar sesión cuando hay un módulo cuya fecha límite ya venció y el docente aún no registró las notas de algún alumno asignado.<br>
-          • Se puede editar desde el panel de <strong>Admin2</strong> también.<br>
-          • El docente puede cerrarlo con "Entendido" pero le volverá a aparecer en la próxima sesión mientras no registre las notas.
         </div>
         </div>
       </div>
@@ -1351,22 +1368,23 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
         <div class="anuncio-config-grid">
           <label>🔘 Activar:</label>
           <label style="display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;">
-            <input type="checkbox" id="a2anuncio3Activo" style="width:16px;height:16px;cursor:pointer;"/> Anuncio activo
+            <input type="checkbox" id="a2anuncio3Activo" onchange="saveAnuncio3Config()" style="width:16px;height:16px;cursor:pointer;"/> Anuncio activo
           </label>
           <label>💬 Icono:</label>
-          <input type="text" id="a2anuncio3IconInput" class="ug-input" value="⚠️"/>
+          <input type="text" id="a2anuncio3IconInput" class="ug-input" value="⚠️" oninput="saveAnuncio3Config()"/>
           <label>📌 Título:</label>
-          <textarea id="a2anuncio3TitleInput" class="ug-input" style="height:50px;">Fecha límite vencida</textarea>
+          <textarea id="a2anuncio3TitleInput" class="ug-input" style="height:50px;" oninput="saveAnuncio3Config()">Fecha límite vencida</textarea>
           <label>📝 Mensaje:</label>
-          <textarea id="a2anuncio3CuerpoInput" class="ug-input" style="height:70px;">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</textarea>
+          <textarea id="a2anuncio3CuerpoInput" class="ug-input" style="height:70px;" oninput="saveAnuncio3Config()">La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.</textarea>
           <label>🎨 Color fondo:</label>
-          <input type="color" id="a2anuncio3BgColor" value="#7a1a1a"/>
+          <input type="color" id="a2anuncio3BgColor" value="#7a1a1a" oninput="saveAnuncio3Config()"/>
           <label>🖋️ Color título:</label>
-          <input type="color" id="a2anuncio3TitleColor" value="#ffffff"/>
+          <input type="color" id="a2anuncio3TitleColor" value="#ffffff" oninput="saveAnuncio3Config()"/>
           <label>🖋️ Color mensaje:</label>
-          <input type="color" id="a2anuncio3BodyColor" value="#ffd0d0"/>
+          <input type="color" id="a2anuncio3BodyColor" value="#ffd0d0" oninput="saveAnuncio3Config()"/>
         </div>
         <button class="btn-sm green" style="margin-top:10px;" onclick="saveAnuncio3Config(); flash('✅ Anuncio 3 guardado.','#1a6b3a')">💾 Guardar Anuncio 3</button>
+        <button class="btn-sm orange" style="margin-top:10px;margin-left:6px;" onclick="previewAnuncio3Admin()">👁️ Previsualizar</button>
       </div>
     </div>
 
@@ -3768,6 +3786,7 @@ function saveAnuncio3Config(){
   setAnuncio3({activo, icono, titulo, cuerpo, bgColor, titleColor, bodyColor});
   // Sync both panels
   loadAnuncio3Config('all');
+  updateAnuncio3Preview();
 }
 
 function loadAnuncio3Config(source){
@@ -3784,6 +3803,36 @@ function loadAnuncio3Config(source){
     if(el('TitleColor')) el('TitleColor').value = a.titleColor||'#ffffff';
     if(el('BodyColor')) el('BodyColor').value = a.bodyColor||'#ffd0d0';
   });
+  updateAnuncio3Preview();
+}
+
+function updateAnuncio3Preview(){
+  const a=getAnuncio3();
+  const icono=document.getElementById('anuncio3IconInput')?.value || document.getElementById('a2anuncio3IconInput')?.value || a.icono || '⚠️';
+  const titulo=document.getElementById('anuncio3TitleInput')?.value || document.getElementById('a2anuncio3TitleInput')?.value || a.titulo || 'Fecha límite vencida';
+  const cuerpo=document.getElementById('anuncio3CuerpoInput')?.value || document.getElementById('a2anuncio3CuerpoInput')?.value || a.cuerpo || 'La fecha límite para registrar notas ha vencido. Por favor comuníquese con el administrador a la brevedad.';
+  const bgColor=document.getElementById('anuncio3BgColor')?.value || document.getElementById('a2anuncio3BgColor')?.value || a.bgColor || '#7a1a1a';
+  const titleColor=document.getElementById('anuncio3TitleColor')?.value || document.getElementById('a2anuncio3TitleColor')?.value || a.titleColor || '#ffffff';
+  const bodyColor=document.getElementById('anuncio3BodyColor')?.value || document.getElementById('a2anuncio3BodyColor')?.value || a.bodyColor || '#ffd0d0';
+
+  const previewBox=document.getElementById('anuncio3PreviewBox');
+  if(previewBox) previewBox.style.background=bgColor;
+  const pIcon=document.getElementById('anuncio3PreviewIcon'); if(pIcon) pIcon.textContent=icono;
+  const pTitle=document.getElementById('anuncio3PreviewTitle'); if(pTitle){pTitle.textContent=titulo;pTitle.style.color=titleColor;}
+  const pBody=document.getElementById('anuncio3PreviewBody'); if(pBody){pBody.textContent=cuerpo;pBody.style.color=bodyColor;}
+}
+
+function previewAnuncio3Admin(){
+  const a = getAnuncio3();
+  const box = document.getElementById('anuncio3Box');
+  if(!box) return;
+  box.style.background = document.getElementById('anuncio3BgColor')?.value || document.getElementById('a2anuncio3BgColor')?.value || a.bgColor || '#7a1a1a';
+  document.getElementById('anuncio3Icon').textContent = document.getElementById('anuncio3IconInput')?.value || document.getElementById('a2anuncio3IconInput')?.value || a.icono || '⚠️';
+  document.getElementById('anuncio3Title').style.color = document.getElementById('anuncio3TitleColor')?.value || document.getElementById('a2anuncio3TitleColor')?.value || a.titleColor || '#fff';
+  document.getElementById('anuncio3Title').textContent = document.getElementById('anuncio3TitleInput')?.value || document.getElementById('a2anuncio3TitleInput')?.value || a.titulo || 'Fecha límite vencida';
+  document.getElementById('anuncio3Body').style.color = document.getElementById('anuncio3BodyColor')?.value || document.getElementById('a2anuncio3BodyColor')?.value || a.bodyColor || '#ffd0d0';
+  document.getElementById('anuncio3Body').textContent = document.getElementById('anuncio3CuerpoInput')?.value || document.getElementById('a2anuncio3CuerpoInput')?.value || a.cuerpo || 'La fecha límite para registrar notas ha vencido.';
+  document.getElementById('anuncio3Overlay').style.display = 'flex';
 }
 
 function docenteTieneNotasVencidas(){
