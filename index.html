@@ -3,13 +3,16 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Colegio — EDUNOVA </title>
+<title>Colegio — San Aurelio </title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Lato:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Raleway:wght@400;700&family=Poppins:wght@400;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<!-- jsPDF (para exportar el reporte de notas en PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCp94HtEK02gsomSrTOf7mPWbMxU2TqFsg",
@@ -48,7 +51,7 @@ body{font-family:Arial,sans-serif;font-size:12px;background:#e8edf5;min-height:1
 .login-logo img,.login-logo svg{width:100%;height:100%;object-fit:contain;}
 .login-uni-name{font-size:11px;font-weight:700;color:var(--login-font-color);line-height:1.3;text-transform:uppercase;}
 .login-uni-sub{font-size:9.5px;color:var(--login-font-color);text-transform:uppercase;font-weight:600;opacity:.85;}
-.login-intranet-label{font-size:19px;font-weight:900;color:var(--login-font-color);letter-spacing:1px;text-transform:uppercase;margin:14px 0 20px 0;}
+.login-intranet-label{font-size:var(--intranet-label-size,19px);font-weight:900;color:var(--login-font-color);letter-spacing:1px;text-transform:uppercase;margin:14px 0 20px 0;}
 .login-field-row{display:flex;align-items:center;gap:6px;}
 .login-field-row label{font-size:12px;color:var(--login-field-label-color,#333);font-weight:600;white-space:nowrap;min-width:72px;text-align:right;}
 .login-field-row input{flex:1;padding:5px 8px;border:1px solid #888;background:#fff;font-size:12px;color:#222;outline:none;}
@@ -68,9 +71,9 @@ body{font-family:Arial,sans-serif;font-size:12px;background:#e8edf5;min-height:1
 .topbar-brand{display:flex;align-items:center;gap:10px;}
 .topbar-logo{width:34px;height:34px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:visible;}
 .topbar-logo img,.topbar-logo svg{width:100%;height:100%;object-fit:contain;}
-.topbar-uni{font-size:10px;font-weight:700;text-transform:uppercase;line-height:1.3;opacity:.9;}
+.topbar-uni{font-size:var(--topbar-uni-size,10px);font-weight:700;text-transform:uppercase;line-height:1.3;opacity:.9;}
 .topbar-right{display:flex;align-items:center;gap:12px;}
-.role-pill{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;}
+.role-pill{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;display:none;}
 .role-pill.admin{background:#f4c430;color:#1a3a6b;}
 .role-pill.admin2{background:#e67e22;color:#fff;}
 .role-pill.docente{background:#4caf50;color:#fff;}
@@ -187,7 +190,7 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
   .topbar{padding:6px 10px;gap:6px;}
   .topbar-brand{gap:6px;}
   .topbar-logo{width:28px;height:28px;}
-  .topbar-uni{font-size:9px;}
+  .topbar-uni{font-size:calc(var(--topbar-uni-size,10px) * 0.85);}
   .topbar-user{font-size:11px;}
   .topbar-code{font-size:9px;}
   .role-pill{font-size:10px;padding:2px 7px;}
@@ -223,18 +226,18 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
   #mainLoginOuter > div[style*="background:#fff"]{display:none!important;}
   #mainLeftBg{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important;border:none!important;}
   #mainBuildingWrap{display:none!important;}
-  #mainLogoWrap,#mainUniNameWrap,#mainLabelWrap,#mainFormWrap,#mainNoticeWrap,#mainFooterWrap{
+  #mainLogoWrap,#mainUniNameWrap,#mainUniSubWrap,#mainLabelWrap,#mainFormWrap,#mainNoticeWrap,#mainFooterWrap{
     position:static!important;left:auto!important;top:auto!important;
     width:100%!important;height:auto!important;
     margin:0 0 14px 0!important;
   }
   #mainLogoWrap{display:flex!important;align-items:center;justify-content:center;margin-bottom:10px!important;}
   #mainLogoContainer{width:56px!important;height:56px!important;}
-  #mainUniNameWrap{text-align:center;}
+  #mainUniNameWrap,#mainUniSubWrap{text-align:center;}
   #mainUniNameWrap .login-uni-name{font-size:13px!important;}
-  #mainUniNameWrap .login-uni-sub{font-size:10.5px!important;}
+  #mainUniSubWrap .login-uni-sub{font-size:10.5px!important;}
   #mainLabelWrap{text-align:center;}
-  #mainIntranetLabel{font-size:20px!important;}
+  #mainIntranetLabel{font-size:var(--intranet-label-size,20px)!important;}
   #mainFormWrap .login-field-row{flex-wrap:wrap;margin-bottom:12px!important;}
   #mainFormWrap .login-field-row label{min-width:100%!important;text-align:left!important;margin-bottom:4px;}
   #mainFormWrap .login-field-row input{
@@ -446,9 +449,9 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
         <svg viewBox="0 0 60 60" fill="none">
           <circle cx="30" cy="30" r="28" fill="#f4c430" stroke="#1a3a6b" stroke-width="3"/>
           <circle cx="30" cy="30" r="22" fill="#fff" stroke="#1a3a6b" stroke-width="2"/>
-          <text x="30" y="26" text-anchor="middle" font-size="7" font-weight="bold" fill="#1a3a6b" font-family="Arial">JDC</text>
+          <text x="30" y="26" text-anchor="middle" font-size="7" font-weight="bold" fill="#1a3a6b" font-family="Arial">SA</text>
           <rect x="14" y="30" width="32" height="2" fill="#1a3a6b"/>
-          <text x="30" y="42" text-anchor="middle" font-size="5.5" fill="#1a3a6b" font-family="Arial">VEGUETA</text>
+          <text x="30" y="42" text-anchor="middle" font-size="5.5" fill="#1a3a6b" font-family="Arial">SAN AURELIO</text>
         </svg>
       </div>
     </div>
@@ -456,6 +459,10 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
     <!-- NOMBRE INSTITUCIÓN -->
     <div id="mainUniNameWrap" style="position:absolute;z-index:3;width:200px;">
       <div class="login-uni-name" id="mainUniName">San Aurelio</div>
+    </div>
+
+    <!-- SUBTÍTULO INSTITUCIÓN -->
+    <div id="mainUniSubWrap" style="position:absolute;z-index:3;width:200px;">
       <div class="login-uni-sub" id="mainUniSub"></div>
     </div>
 
@@ -624,11 +631,9 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
             <select class="ug-select" id="nuAsigAlumnoSel" style="max-width:240px;" onchange="renderAlumnoAsigPanel('nu')">
               <option value="">— Selecciona el alumno ya creado —</option>
             </select>
-            <select class="ug-select" id="nuAsigAlumnoMateria" style="max-width:200px;" disabled>
-              <option value="">— Materia a asignar —</option>
-            </select>
-            <button class="btn-sm green" style="font-size:11px;" onclick="asignarMateriaAlumno('nu')">➕ Asignar materia</button>
           </div>
+          <div id="nuAsigAlumnoMateriasChecks" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+          <button class="btn-sm green" style="font-size:11px;" onclick="asignarMateriasAlumno('nu')">➕ Agregar materias</button>
           <div id="nuAlumnoMateriasLista" style="margin-top:8px;"></div>
         </div>
 
@@ -644,7 +649,7 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
         <div id="globalLockBanner" style="display:none;"></div>
         <div class="notes-filter">
           <select id="filterDocente" onchange="refreshAdminNotas()"><option value="">— Todos —</option></select>
-          <button class="btn-sm blue" onclick="exportCSV()">⬇ Exportar CSV</button>
+          <button class="btn-sm blue" onclick="exportPDF()">⬇ Exportar PDF</button>
           <button class="btn-sm green" onclick="toggleAllLock(true)" id="btnCerrarTodas">🔒 Cerrar Todas</button>
           <button class="btn-sm orange" onclick="toggleAllLock(false)" id="btnAbrirTodas">🔓 Abrir Todas</button>
         </div>
@@ -678,9 +683,9 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
       <div id="tabTabla" class="panel-card" style="display:none;">
         <div class="panel-title">⚙ Configuración de la Tabla y Estilos</div>
         <div class="pct-row">
-          <label>Porcentajes PM: EC</label><input class="pct-input" id="pctEC" value="20" type="number"/>%
-          <label>EP</label><input class="pct-input" id="pctEP" value="35" type="number"/>%
-          <label>ED</label><input class="pct-input" id="pctED" value="45" type="number"/>%
+          <label>Porcentajes PM: EC</label><input class="pct-input" id="pctEC" value="20" type="number" oninput="updatePctTotal()"/>%
+          <label>EP</label><input class="pct-input" id="pctEP" value="35" type="number" oninput="updatePctTotal()"/>%
+          <label>ED</label><input class="pct-input" id="pctED" value="45" type="number" oninput="updatePctTotal()"/>%
           <span class="pct-total" id="pctTotal">Total: 100%</span>
         </div>
         <div class="admin-pickers">
@@ -785,15 +790,25 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
             <div style="font-weight:700;color:#1a3a6b;font-size:12px;margin-bottom:10px;border-bottom:1px solid #d0daea;padding-bottom:6px;">📝 Textos</div>
             <div class="config-grid" style="grid-template-columns:130px 1fr;">
               <label>Nombre Institución:</label>
-              <input class="ug-input" id="cfgUniName" value="EDUNOVA" oninput="updateLivePreview(); autoSaveInicio()"/>
+              <input class="ug-input" id="cfgUniName" value="José del Carmen" oninput="updateLivePreview(); autoSaveInicio()"/>
+              <label>Tamaño nombre (barra sup.):</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="range" id="cfgTopbarUniSize" min="8" max="28" value="10" style="flex:1;" oninput="document.getElementById('cfgTopbarUniSizeVal').textContent=this.value+'px'; updateLivePreview(); autoSaveInicio()"/>
+                <span id="cfgTopbarUniSizeVal" style="font-size:11px;color:#666;min-width:32px;">10px</span>
+              </div>
               <label>Subtítulo:</label>
               <input class="ug-input" id="cfgUniSub" value="" oninput="updateLivePreview(); autoSaveInicio()"/>
               <label>Etiqueta Sistema:</label>
               <input class="ug-input" id="cfgIntranetLabel" value="CALIFICACIONES" oninput="updateLivePreview(); autoSaveInicio()"/>
+              <label>Tamaño Etiqueta Sistema:</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="range" id="cfgIntranetLabelSize" min="12" max="48" value="20" style="flex:1;" oninput="document.getElementById('cfgIntranetLabelSizeVal').textContent=this.value+'px'; updateLivePreview(); autoSaveInicio()"/>
+                <span id="cfgIntranetLabelSizeVal" style="font-size:11px;color:#666;min-width:32px;">20px</span>
+              </div>
               <label>Aviso Derecho:</label>
               <textarea class="ug-input" id="cfgRightNotice" style="height:46px;" oninput="updateLivePreview(); autoSaveInicio()"></textarea>
               <label>Pie de Página:</label>
-              <input class="ug-input" id="cfgFooterText" value="EDUNOVA" oninput="updateLivePreview(); autoSaveInicio()"/>
+              <input class="ug-input" id="cfgFooterText" value="José del Carmen" oninput="updateLivePreview(); autoSaveInicio()"/>
               <label>Color barra superior:</label>
               <div style="display:flex;align-items:center;gap:6px;">
                 <input type="color" id="cfgTopbarColor" value="#1a3a6b" oninput="updateLivePreview(); autoSaveInicio()" title="Color de la barra superior"/>
@@ -930,6 +945,10 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
             <!-- NOMBRE INSTITUCIÓN -->
             <div id="dnd-uniname" class="dnd-item" data-id="uniname" style="left:78px;top:14px;width:200px;cursor:move;position:absolute;z-index:3;" title="Arrastra para mover el nombre">
               <div id="prevUniName" class="login-uni-name" style="font-size:11px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">San Aurelio</div>
+              <div class="dnd-handle">⠿</div>
+            </div>
+            <!-- SUBTÍTULO INSTITUCIÓN -->
+            <div id="dnd-unisub" class="dnd-item" data-id="unisub" style="left:78px;top:36px;width:200px;cursor:move;position:absolute;z-index:3;" title="Arrastra para mover el subtítulo">
               <div id="prevUniSub" class="login-uni-sub" style="font-size:9.5px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
               <div class="dnd-handle">⠿</div>
             </div>
@@ -1406,11 +1425,9 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
             <select class="ug-select" id="a2nuAsigAlumnoSel" style="max-width:240px;" onchange="renderAlumnoAsigPanel('a2nu')">
               <option value="">— Selecciona el alumno ya creado —</option>
             </select>
-            <select class="ug-select" id="a2nuAsigAlumnoMateria" style="max-width:200px;" disabled>
-              <option value="">— Materia a asignar —</option>
-            </select>
-            <button class="btn-sm green" style="font-size:11px;" onclick="asignarMateriaAlumno('a2nu')">➕ Asignar materia</button>
           </div>
+          <div id="a2nuAsigAlumnoMateriasChecks" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+          <button class="btn-sm green" style="font-size:11px;" onclick="asignarMateriasAlumno('a2nu')">➕ Agregar materias</button>
           <div id="a2nuAlumnoMateriasLista" style="margin-top:8px;"></div>
         </div>
 
@@ -1847,9 +1864,32 @@ function capitalizeInput(input){
 }
 function V(id){return document.getElementById(id).value.trim();}
 function err(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},3000);}
-function logout(){currentMode=null;currentUser=null;currentHijo=null;anuncio1CerradoSesion=false;anuncio2CerradoSesion=false;applyDynamicTexts();clearLoginForm();document.getElementById('loginOverlay').style.display='flex';document.getElementById('app').style.display='none';const syncInd=document.getElementById('syncActivoIndicator');if(syncInd) syncInd.style.display='none';}
+function logout(){
+  currentMode=null;currentUser=null;currentHijo=null;anuncio1CerradoSesion=false;anuncio2CerradoSesion=false;
+  sessionStorage.removeItem('sanAurelioSesion');
+  applyDynamicTexts();clearLoginForm();document.getElementById('loginOverlay').style.display='flex';document.getElementById('app').style.display='none';const syncInd=document.getElementById('syncActivoIndicator');if(syncInd) syncInd.style.display='none';
+}
+
+// ── Persistencia de sesión: al refrescar la página (F5 / botón del navegador)
+// no se cierra la sesión, solo se refresca la vista con los datos actualizados.
+function guardarSesion(){
+  try{
+    sessionStorage.setItem('sanAurelioSesion', JSON.stringify({mode:currentMode, user:currentUser, hijo:currentHijo}));
+  }catch(e){}
+}
+function restaurarSesion(){
+  try{
+    const raw=sessionStorage.getItem('sanAurelioSesion');
+    if(!raw) return false;
+    const s=JSON.parse(raw);
+    if(!s||!s.mode||!s.user) return false;
+    currentMode=s.mode; currentUser=s.user; currentHijo=s.hijo||null;
+    return true;
+  }catch(e){ return false; }
+}
 
 function openApp(){
+  guardarSesion();
   document.getElementById('loginOverlay').style.display='none';
   document.getElementById('app').style.display='block';
   const pill=document.getElementById('rolePill');
@@ -2202,6 +2242,70 @@ function admin2ToggleLock(k,l){
 function toggleAllLock(l){
   const n=getNotas(); Object.keys(n).forEach(k=>{n[k].locked=l;}); setNotas(n); refreshAdminNotas();
   flash(l?'🔒 Todas las notas cerradas.':'🔓 Todas las notas abiertas.','#1a3a6b');
+}
+// Exporta un PDF con el formato de boleta de notas: una tabla por alumno,
+// con sus materias como filas y los módulos (EC/EP/ED/PM) como columnas agrupadas,
+// terminando en la columna P.F (promedio final).
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const n=getNotas(); const p=getPcts(); const cfg=getConfig();
+  const filterEl=document.getElementById('filterDocente');
+  const filter=filterEl?filterEl.value:'';
+  const items=Object.keys(n).map(k=>({key:k,...n[k]})).filter(x=>!filter||x.docenteCodigo===filter);
+
+  if(!items.length){ flash('⚠ No hay notas registradas para exportar.','#e67e22'); return; }
+
+  const porAlumno={};
+  items.forEach(x=>{
+    if(!porAlumno[x.alumnoCodigo]) porAlumno[x.alumnoCodigo]={nombre:x.alumnoNombre, grado:x.gradoSeccion||'', materias:[]};
+    porAlumno[x.alumnoCodigo].materias.push(x);
+  });
+
+  const mods=[cfg.editMod1||'MÓDULO I',cfg.editMod2||'MÓDULO II',cfg.editMod3||'MÓDULO III',cfg.editMod4||'MÓDULO IV'];
+  const ecL=cfg.editEC||'EC', epL=cfg.editEP||'EP', edL=cfg.editED||'ED', pmL=cfg.editPM||'PM', pfL=cfg.editPF||'P.F';
+
+  const doc=new jsPDF({orientation:'landscape'});
+  let first=true;
+
+  Object.values(porAlumno).forEach(al=>{
+    if(!first) doc.addPage();
+    first=false;
+
+    doc.setFontSize(14);
+    doc.text('Reporte de Notas — '+al.nombre, 14, 15);
+    doc.setFontSize(10);
+    doc.text('Grado/Sección: '+(al.grado||'—'), 14, 21);
+
+    const head=[
+      [{content:'Nombre del Curso',rowSpan:2},
+       {content:mods[0],colSpan:4},{content:mods[1],colSpan:4},{content:mods[2],colSpan:4},{content:mods[3],colSpan:4},
+       {content:pfL,rowSpan:2}],
+      [ecL,epL,edL,pmL, ecL,epL,edL,pmL, ecL,epL,edL,pmL, ecL,epL,edL,pmL]
+    ];
+
+    const body=al.materias.map(m=>{
+      const d=(m.tableData&&m.tableData[0])||{v:[[null,null,null],[null,null,null],[null,null,null],[null,null,null]]};
+      const {pms,pf}=calcPMs(d,p);
+      const row=[m.materia];
+      for(let i=0;i<4;i++){
+        const[ec,ep,ed]=d.v[i];
+        row.push(ec!==null?ec:'', ep!==null?ep:'', ed!==null?ed:'', pms[i]!==null?pms[i].toFixed(1):'');
+      }
+      row.push(pf!==null?pf.toFixed(1):'');
+      return row;
+    });
+
+    doc.autoTable({
+      startY:26,
+      head, body,
+      theme:'grid',
+      styles:{fontSize:8, halign:'center', valign:'middle'},
+      headStyles:{fillColor:[26,58,107], textColor:255, fontStyle:'bold'},
+      columnStyles:{0:{halign:'left', cellWidth:55}},
+    });
+  });
+
+  doc.save('reporte_notas.pdf');
 }
 function exportCSV(){
   const n=getNotas(); const p=getPcts();
@@ -2650,11 +2754,24 @@ function loadTableEditorValues(){
   Object.entries(colorFields).forEach(([k,def])=>{const el=document.getElementById(k);if(el)el.value=c[k]||def;});
 }
 function applyTableEdits(){renderPreviewTable();}
+// Recalcula el Total en vivo a partir de los 3 porcentajes EC/EP/ED (que ahora sí se suman)
+function updatePctTotal(){
+  const ec=parseFloat(document.getElementById('pctEC').value)||0;
+  const ep=parseFloat(document.getElementById('pctEP').value)||0;
+  const ed=parseFloat(document.getElementById('pctED').value)||0;
+  const total=ec+ep+ed;
+  const totalEl=document.getElementById('pctTotal');
+  totalEl.textContent='Total: '+total+'%';
+  totalEl.style.color=(total===100)?'':'#c0392b';
+}
 function saveTableEdits(){
   const c=getConfig();
   ['editGrade','editCol1','editMod1','editMod2','editMod3','editMod4','editEC','editEP','editED','editPM','editPF','editNombreBg','editNombreText','editPmBg','editPfBg'].forEach(k=>{
     const el=document.getElementById(k);if(el)c[k]=el.value;
   });
+  const pctEC=document.getElementById('pctEC');if(pctEC)c.pctEC=pctEC.value;
+  const pctEP=document.getElementById('pctEP');if(pctEP)c.pctEP=pctEP.value;
+  const pctED=document.getElementById('pctED');if(pctED)c.pctED=pctED.value;
   setConfig(c);
   flash('✅ Configuración de tabla guardada.','#1a6b3a');
 }
@@ -2679,6 +2796,10 @@ function renderPreviewTable(){
 function loadConfig(){
   const cfg=getConfig();
   ['row1BgColor','row1TextColor','row2BgColor','row2TextColor','pmColorPicker','pfColorPicker'].forEach(id=>{if(cfg[id]){const el=document.getElementById(id);if(el)el.value=cfg[id];}});
+  const pctECel=document.getElementById('pctEC');if(pctECel)pctECel.value=cfg.pctEC||20;
+  const pctEPel=document.getElementById('pctEP');if(pctEPel)pctEPel.value=cfg.pctEP||35;
+  const pctEDel=document.getElementById('pctED');if(pctEDel)pctEDel.value=cfg.pctED||45;
+  updatePctTotal();
   applyHeaderColors();
 }
 function applyHeaderColors(){
@@ -2700,11 +2821,11 @@ function applyHeaderColors(){
 // ── INICIO CONFIG ────────────────────────────────────────────────
 function loadInicioConfigInputs(){
   const cfg=getConfig();
-  document.getElementById('cfgUniName').value=cfg.cfgUniName||"EDUNOVA";
+  document.getElementById('cfgUniName').value=cfg.cfgUniName||"José del Carmen";
   document.getElementById('cfgUniSub').value=cfg.cfgUniSub||"";
   document.getElementById('cfgIntranetLabel').value=cfg.cfgIntranetLabel||"CALIFICACIONES";
-  document.getElementById('cfgRightNotice').value=cfg.cfgRightNotice||"Sistema de Gestión de Calificaciones — EDUNOVA. Ingrese con su nombre completo y código asignado por el administrador.";
-  document.getElementById('cfgFooterText').value=cfg.cfgFooterText||"EDUNOVA — Derechos Reservados";
+  document.getElementById('cfgRightNotice').value=cfg.cfgRightNotice||"Sistema de Gestión de Calificaciones — José del Carmen. Ingrese con su nombre completo y código asignado por el administrador.";
+  document.getElementById('cfgFooterText').value=cfg.cfgFooterText||"José del Carmen — Derechos Reservados";
   document.getElementById('cfgAdminNombre').value=cfg.cfgAdminNombre||"Luis Renato Collantes Rojas";
   document.getElementById('cfgAdminPass').value=cfg.cfgAdminPass||"10079304383324";
   document.getElementById('cfgLogoBgColor').value=cfg.cfgLogoBgColor||"#1a3a6b";
@@ -2723,6 +2844,8 @@ function loadInicioConfigInputs(){
   const bbc2=document.getElementById('cfgBtnBgColor');if(bbc2)bbc2.value=cfg.cfgBtnBgColor||'#e0e8f0';
   const btc2=document.getElementById('cfgBtnTextColor');if(btc2)btc2.value=cfg.cfgBtnTextColor||'#1a3a6b';
   const noBg=document.getElementById('cfgLogoNoBg');if(noBg)noBg.checked=cfg.cfgLogoNoBg||false;
+  const tus=document.getElementById('cfgTopbarUniSize');if(tus){tus.value=cfg.cfgTopbarUniSize||10;const l=document.getElementById('cfgTopbarUniSizeVal');if(l)l.textContent=(cfg.cfgTopbarUniSize||10)+'px';}
+  const ils=document.getElementById('cfgIntranetLabelSize');if(ils){ils.value=cfg.cfgIntranetLabelSize||19;const l2=document.getElementById('cfgIntranetLabelSizeVal');if(l2)l2.textContent=(cfg.cfgIntranetLabelSize||19)+'px';}
   previewZoom=cfg.previewZoom||0.85; applyPreviewZoom();
   if(cfg.dndPositions) restoreDndPositions(cfg.dndPositions);
   updateLivePreview();
@@ -2782,6 +2905,8 @@ function saveInicioConfig(){
   cfg.cfgUniName=document.getElementById('cfgUniName').value;
   cfg.cfgUniSub=document.getElementById('cfgUniSub').value;
   cfg.cfgIntranetLabel=document.getElementById('cfgIntranetLabel').value;
+  const topbarUniSizeEl=document.getElementById('cfgTopbarUniSize');if(topbarUniSizeEl)cfg.cfgTopbarUniSize=parseInt(topbarUniSizeEl.value)||10;
+  const intranetLabelSizeEl=document.getElementById('cfgIntranetLabelSize');if(intranetLabelSizeEl)cfg.cfgIntranetLabelSize=parseInt(intranetLabelSizeEl.value)||19;
   cfg.cfgRightNotice=document.getElementById('cfgRightNotice').value;
   cfg.cfgFooterText=document.getElementById('cfgFooterText').value;
   cfg.cfgAdminNombre=document.getElementById('cfgAdminNombre').value;
@@ -2840,6 +2965,7 @@ function resetImage(type){
 const DND_DEFAULTS = {
   'dnd-logo':     {left:14,top:14},
   'dnd-uniname':  {left:78,top:14},
+  'dnd-unisub':   {left:78,top:36},
   'dnd-label':    {left:14,top:80},
   'dnd-form':     {left:14,top:130},
   'dnd-building': {left:308,top:10},
@@ -2914,6 +3040,7 @@ function initDragAndDrop(){
 const DND_TO_MAIN = {
   'dnd-logo':     'mainLogoWrap',
   'dnd-uniname':  'mainUniNameWrap',
+  'dnd-unisub':   'mainUniSubWrap',
   'dnd-label':    'mainLabelWrap',
   'dnd-form':     'mainFormWrap',
   'dnd-building': 'mainBuildingWrap',
@@ -2973,12 +3100,28 @@ function applyDynamicTexts(){
   const fontColor=cfg.cfgLoginFontColor||'#1a3a6b';
 
   // Textos
-  document.getElementById('mainUniName').textContent=cfg.cfgUniName||"EDUNOVA";
+  document.getElementById('mainUniName').textContent=cfg.cfgUniName||"José del Carmen";
   document.getElementById('mainUniSub').textContent=cfg.cfgUniSub||"";
   document.getElementById('mainIntranetLabel').textContent=cfg.cfgIntranetLabel||"CALIFICACIONES";
-  document.getElementById('mainRightNotice').innerHTML=(cfg.cfgRightNotice||"Sistema de Gestión de Calificaciones — EDUNOVA.<br>Ingrese con su nombre completo y código asignado por el administrador.").replace(/\n/g,'<br>');
-  document.getElementById('mainFooterText').textContent=cfg.cfgFooterText||"— EDUNOVA —";
-  document.getElementById('topbarUniName').textContent=(cfg.cfgUniName||"EDUNOVA");
+  document.getElementById('mainRightNotice').innerHTML=(cfg.cfgRightNotice||"Sistema de Gestión de Calificaciones — José del Carmen.<br>Ingrese con su nombre completo y código asignado por el administrador.").replace(/\n/g,'<br>');
+  document.getElementById('mainFooterText').textContent=cfg.cfgFooterText||"José del Carmen — Derechos Reservados";
+  document.getElementById('topbarUniName').textContent=(cfg.cfgUniName||"José del Carmen");
+
+  // Tamaños configurables: nombre en barra superior y etiqueta "Bienvenido"/Sistema
+  const topbarUniSize=cfg.cfgTopbarUniSize||10;
+  const intranetLabelSize=cfg.cfgIntranetLabelSize||19;
+  document.documentElement.style.setProperty('--topbar-uni-size', topbarUniSize+'px');
+  document.documentElement.style.setProperty('--intranet-label-size', intranetLabelSize+'px');
+  const topbarUniSizeInput=document.getElementById('cfgTopbarUniSize');
+  if(topbarUniSizeInput){
+    topbarUniSizeInput.value=topbarUniSize;
+    const lbl=document.getElementById('cfgTopbarUniSizeVal'); if(lbl) lbl.textContent=topbarUniSize+'px';
+  }
+  const intranetLabelSizeInput=document.getElementById('cfgIntranetLabelSize');
+  if(intranetLabelSizeInput){
+    intranetLabelSizeInput.value=intranetLabelSize;
+    const lbl2=document.getElementById('cfgIntranetLabelSizeVal'); if(lbl2) lbl2.textContent=intranetLabelSize+'px';
+  }
 
   // Labels y botón personalizables
   const lblU=document.getElementById('loginLabelUsuario');
@@ -3028,7 +3171,7 @@ function applyDynamicTexts(){
     logoBox.style.background=noBg?'transparent':(cfg.cfgLogoBgColor||'#1a3a6b');
     logoBox.innerHTML=customLogoBase64
       ?('<img src="'+customLogoBase64+'" alt="Logo" style="width:100%;height:100%;object-fit:contain;">')
-      :'<svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="#f4c430" stroke="#1a3a6b" stroke-width="3"/><circle cx="30" cy="30" r="22" fill="#fff" stroke="#1a3a6b" stroke-width="2"/><text x="30" y="26" text-anchor="middle" font-size="7" font-weight="bold" fill="#1a3a6b" font-family="Arial">CPE</text><rect x="14" y="30" width="32" height="2" fill="#1a3a6b"/><text x="30" y="42" text-anchor="middle" font-size="5.5" fill="#1a3a6b" font-family="Arial">VEGUETA</text></svg>';
+      :'<svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="#f4c430" stroke="#1a3a6b" stroke-width="3"/><circle cx="30" cy="30" r="22" fill="#fff" stroke="#1a3a6b" stroke-width="2"/><text x="30" y="26" text-anchor="middle" font-size="7" font-weight="bold" fill="#1a3a6b" font-family="Arial">SA</text><rect x="14" y="30" width="32" height="2" fill="#1a3a6b"/><text x="30" y="42" text-anchor="middle" font-size="5.5" fill="#1a3a6b" font-family="Arial">SAN AURELIO</text></svg>';
   }
 
   // Portada
@@ -3047,7 +3190,7 @@ function applyDynamicTexts(){
     topbarBox.style.background=topbarNoBg?'transparent':(cfg.cfgTopbarLogoBgColor||'#1a3a6b');
     topbarBox.innerHTML=customLogoBase64
       ?('<img src="'+customLogoBase64+'" alt="Logo" style="width:100%;height:100%;object-fit:contain;">')
-      :'<svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="#f4c430"/><circle cx="30" cy="30" r="22" fill="#1a3a6b"/><text x="30" y="27" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="Arial">CPE</text></svg>';
+      :'<svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="#f4c430"/><circle cx="30" cy="30" r="22" fill="#1a3a6b"/><text x="30" y="27" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="Arial">JDC</text></svg>';
   }
 
   // Aplicar posiciones guardadas a la carátula real
@@ -3064,6 +3207,7 @@ function applyDefaultMainPositions(){
   const map={
     mainLogoWrap:     {left:14,top:14,width:'56px',height:'56px'},
     mainUniNameWrap:  {left:78,top:14,width:'200px'},
+    mainUniSubWrap:   {left:78,top:36,width:'200px'},
     mainLabelWrap:    {left:14,top:78,width:'270px'},
     mainFormWrap:     {left:14,top:128,width:'270px'},
     mainBuildingWrap: {left:308,top:10,width:'450px',height:'145px'},
@@ -3665,19 +3809,31 @@ function populateAlumnoAsigSelect(prefix){
   const alumnos=getUsers().filter(u=>u.rol==='alumno').sort((a,b)=>a.nombre.localeCompare(b.nombre));
   sel.innerHTML='<option value="">— Selecciona el alumno ya creado —</option>'+alumnos.map(a=>`<option value="${a.codigo}">${a.nombre} (${a.codigo})</option>`).join('');
   if(alumnos.some(a=>a.codigo===valActual)) sel.value=valActual;
-  // populate materias select
-  const matSel=document.getElementById(prefix+'AsigAlumnoMateria');
-  if(matSel){
-    const mats=getMaterias();
-    matSel.innerHTML='<option value="">— Materia a asignar —</option>'+mats.map(m=>`<option>${m}</option>`).join('');
-    matSel.disabled=false;
-  }
+  renderAlumnoMateriasChecks(prefix);
   renderAlumnoAsigPanel(prefix);
+}
+// Pinta las casillas (checkboxes) con todas las materias disponibles para el alumno
+// seleccionado, marcando como deshabilitadas las que ya tiene asignadas.
+function renderAlumnoMateriasChecks(prefix){
+  const checksDiv=document.getElementById(prefix+'AsigAlumnoMateriasChecks');
+  if(!checksDiv) return;
+  const cod=document.getElementById(prefix+'AsigAlumnoSel').value;
+  if(!cod){checksDiv.innerHTML='';return;}
+  const asig=getAsig();
+  const yaAsignadas=asig[cod]||[];
+  const mats=getMaterias();
+  checksDiv.innerHTML=mats.map(m=>{
+    const marcado=yaAsignadas.includes(m);
+    return `<label style="display:inline-flex;align-items:center;gap:4px;background:${marcado?'#eee':'#fff'};border:1px solid #b8e0c0;border-radius:10px;padding:3px 10px;font-size:11px;color:${marcado?'#999':'#1a3a6b'};cursor:${marcado?'default':'pointer'};">
+      <input type="checkbox" class="${prefix}AlumnoMateriaCheck" value="${m.replace(/"/g,'&quot;')}" ${marcado?'checked disabled':''} style="margin:0;"> ${m}${marcado?' ✓':''}
+    </label>`;
+  }).join('');
 }
 function renderAlumnoAsigPanel(prefix){
   const sel=document.getElementById(prefix+'AsigAlumnoSel');
   const div=document.getElementById(prefix+'AlumnoMateriasLista');
   if(!sel||!div) return;
+  renderAlumnoMateriasChecks(prefix);
   const cod=sel.value;
   if(!cod){div.innerHTML='';return;}
   const asig=getAsig();
@@ -3692,18 +3848,28 @@ function renderAlumnoAsigPanel(prefix){
     </div>
   </div>`;
 }
-function asignarMateriaAlumno(prefix){
+function asignarMateriasAlumno(prefix){
   const cod=document.getElementById(prefix+'AsigAlumnoSel').value;
-  const mat=document.getElementById(prefix+'AsigAlumnoMateria').value;
-  if(!cod||!mat){flash('⚠ Selecciona un alumno y una materia.','#e67e22');return;}
+  if(!cod){flash('⚠ Selecciona primero un alumno.','#e67e22');return;}
+  const marcadas=[...document.querySelectorAll('.'+prefix+'AlumnoMateriaCheck:checked:not(:disabled)')].map(c=>c.value);
+  if(!marcadas.length){flash('⚠ Marca al menos una materia.','#e67e22');return;}
   const asig=getAsig();
   if(!asig[cod]) asig[cod]=[];
-  if(asig[cod].includes(mat)){flash('⚠ Esa materia ya está asignada a este alumno.','#e67e22');return;}
   const maxMat=getMaxMateriasAlumno(cod);
-  if(asig[cod].length>=maxMat){flash(`⛔ Este alumno ya alcanzó su límite de ${maxMat} materia(s). Aumenta el límite en la pestaña ⚙️ Límites.`,'#c0392b');return;}
-  asig[cod].push(mat); setAsig(asig);
+  const espacioDisponible=maxMat-asig[cod].length;
+  if(espacioDisponible<=0){flash(`⛔ Este alumno ya alcanzó su límite de ${maxMat} materia(s). Aumenta el límite en la pestaña ⚙️ Límites.`,'#c0392b');return;}
+  let agregadas=0;
+  for(const mat of marcadas){
+    if(agregadas>=espacioDisponible) break;
+    if(!asig[cod].includes(mat)){ asig[cod].push(mat); agregadas++; }
+  }
+  setAsig(asig);
   renderAlumnoAsigPanel(prefix);
-  flash('✅ Materia asignada al alumno.','#1a6b3a');
+  if(agregadas<marcadas.length){
+    flash(`⚠ Se agregaron ${agregadas} materia(s). El resto no cupo por el límite de ${maxMat}.`,'#e67e22');
+  } else {
+    flash(`✅ ${agregadas} materia(s) agregada(s) al alumno.`,'#1a6b3a');
+  }
 }
 function quitarMateriaAlumnoPanel(prefix,cod,i){
   const asig=getAsig();
@@ -4349,7 +4515,14 @@ window.onload=async function(){
 
   loadMsg.remove();
   applyDynamicTexts();
-  document.getElementById('loginOverlay').style.display = 'flex';
+
+  // Si había una sesión activa (antes de refrescar/recargar), la restauramos
+  // en vez de mostrar la pantalla de login otra vez.
+  if(restaurarSesion()){
+    openApp();
+  } else {
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
   setTimeout(initDragAndDrop,200);
 
   // set today on date fields
