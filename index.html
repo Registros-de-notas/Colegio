@@ -28,6 +28,8 @@ const db = firebase.firestore();
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:Arial,sans-serif;font-size:12px;background:#e8edf5;min-height:100vh;}
+#bgWatermark{position:fixed;inset:0;z-index:0;pointer-events:none;background-repeat:no-repeat;background-position:center 120px;background-size:min(55vw,520px);opacity:.07;}
+#app{position:relative;z-index:1;}
 #admin2Panel{background:var(--panel-admin2-bg,transparent);}
 #docentePanel{background:var(--panel-docente-bg,transparent);}
 #alumnoViewPanel{background:var(--panel-alumno-bg,transparent);}
@@ -71,7 +73,7 @@ body{font-family:Arial,sans-serif;font-size:12px;background:#e8edf5;min-height:1
 .topbar-brand{display:flex;align-items:center;gap:10px;}
 .topbar-logo{width:34px;height:34px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:visible;}
 .topbar-logo img,.topbar-logo svg{width:100%;height:100%;object-fit:contain;}
-.topbar-uni{font-size:var(--topbar-uni-size,10px);font-weight:700;text-transform:uppercase;line-height:1.3;opacity:.9;}
+.topbar-uni{font-size:var(--topbar-uni-size,10px);font-family:var(--topbar-uni-font,inherit);font-weight:700;text-transform:uppercase;line-height:1.3;opacity:.9;}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .role-pill{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;display:none;}
 .role-pill.admin{background:#f4c430;color:#1a3a6b;}
@@ -379,6 +381,7 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
 </style>
 </head>
 <body>
+<div id="bgWatermark"></div>
 <div id="flashMsg"></div>
 
 <!-- ANUNCIO ALUMNO OVERLAY (Anuncio 1 — ligado a fechas de evaluación) -->
@@ -796,6 +799,17 @@ input.col1-input{border:none;background:transparent;color:var(--row2-text);font-
                 <input type="range" id="cfgTopbarUniSize" min="8" max="28" value="10" style="flex:1;" oninput="document.getElementById('cfgTopbarUniSizeVal').textContent=this.value+'px'; updateLivePreview(); autoSaveInicio()"/>
                 <span id="cfgTopbarUniSizeVal" style="font-size:11px;color:#666;min-width:32px;">10px</span>
               </div>
+              <label>Tipografía nombre (barra sup.):</label>
+              <select class="ug-select" id="cfgTopbarUniFont" oninput="updateLivePreview(); autoSaveInicio()">
+                <option value="Arial,sans-serif">Arial (por defecto)</option>
+                <option value="'Segoe UI',sans-serif">Segoe UI</option>
+                <option value="'Times New Roman',serif">Times New Roman</option>
+                <option value="Georgia,serif">Georgia</option>
+                <option value="'Courier New',monospace">Courier New</option>
+                <option value="Verdana,sans-serif">Verdana</option>
+                <option value="Tahoma,sans-serif">Tahoma</option>
+                <option value="'Roboto',sans-serif">Roboto ✨</option>
+              </select>
               <label>Subtítulo:</label>
               <input class="ug-input" id="cfgUniSub" value="" oninput="updateLivePreview(); autoSaveInicio()"/>
               <label>Etiqueta Sistema:</label>
@@ -1920,6 +1934,7 @@ function openApp(){
     document.getElementById('docentePanel').style.display='block';
     populateDocenteSelect(); docenteSelAlumno(); renderDocenteStatus();
     setTimeout(()=>mostrarAnuncio3SiCorresponde(), 800);
+    setTimeout(()=>mostrarAnuncio2SiCorresponde(false), 300);
   } else if(currentMode==='alumno'){
     document.getElementById('alumnoViewPanel').style.display='block';
     // Cada inicio de sesión es una sesión nueva: los anuncios deben poder volver a salir.
@@ -1933,6 +1948,8 @@ function openApp(){
     if(padrePanelEl) padrePanelEl.style.display='block';
     renderPadreView();
     setTimeout(()=>renderPadreView(), 1500);
+    anuncio2CerradoSesion=false;
+    setTimeout(()=>mostrarAnuncio2SiCorresponde(false), 300);
   }
 }
 
@@ -2845,6 +2862,7 @@ function loadInicioConfigInputs(){
   const btc2=document.getElementById('cfgBtnTextColor');if(btc2)btc2.value=cfg.cfgBtnTextColor||'#1a3a6b';
   const noBg=document.getElementById('cfgLogoNoBg');if(noBg)noBg.checked=cfg.cfgLogoNoBg||false;
   const tus=document.getElementById('cfgTopbarUniSize');if(tus){tus.value=cfg.cfgTopbarUniSize||10;const l=document.getElementById('cfgTopbarUniSizeVal');if(l)l.textContent=(cfg.cfgTopbarUniSize||10)+'px';}
+  const tuf=document.getElementById('cfgTopbarUniFont');if(tuf)tuf.value=cfg.cfgTopbarUniFont||'Arial,sans-serif';
   const ils=document.getElementById('cfgIntranetLabelSize');if(ils){ils.value=cfg.cfgIntranetLabelSize||19;const l2=document.getElementById('cfgIntranetLabelSizeVal');if(l2)l2.textContent=(cfg.cfgIntranetLabelSize||19)+'px';}
   previewZoom=cfg.previewZoom||0.85; applyPreviewZoom();
   if(cfg.dndPositions) restoreDndPositions(cfg.dndPositions);
@@ -2906,6 +2924,7 @@ function saveInicioConfig(){
   cfg.cfgUniSub=document.getElementById('cfgUniSub').value;
   cfg.cfgIntranetLabel=document.getElementById('cfgIntranetLabel').value;
   const topbarUniSizeEl=document.getElementById('cfgTopbarUniSize');if(topbarUniSizeEl)cfg.cfgTopbarUniSize=parseInt(topbarUniSizeEl.value)||10;
+  const topbarUniFontEl=document.getElementById('cfgTopbarUniFont');if(topbarUniFontEl)cfg.cfgTopbarUniFont=topbarUniFontEl.value;
   const intranetLabelSizeEl=document.getElementById('cfgIntranetLabelSize');if(intranetLabelSizeEl)cfg.cfgIntranetLabelSize=parseInt(intranetLabelSizeEl.value)||19;
   cfg.cfgRightNotice=document.getElementById('cfgRightNotice').value;
   cfg.cfgFooterText=document.getElementById('cfgFooterText').value;
@@ -3111,6 +3130,9 @@ function applyDynamicTexts(){
   const topbarUniSize=cfg.cfgTopbarUniSize||10;
   const intranetLabelSize=cfg.cfgIntranetLabelSize||19;
   document.documentElement.style.setProperty('--topbar-uni-size', topbarUniSize+'px');
+  document.documentElement.style.setProperty('--topbar-uni-font', cfg.cfgTopbarUniFont||'inherit');
+  const topbarUniFontInput=document.getElementById('cfgTopbarUniFont');
+  if(topbarUniFontInput) topbarUniFontInput.value=cfg.cfgTopbarUniFont||'Arial,sans-serif';
   document.documentElement.style.setProperty('--intranet-label-size', intranetLabelSize+'px');
   const topbarUniSizeInput=document.getElementById('cfgTopbarUniSize');
   if(topbarUniSizeInput){
@@ -3190,7 +3212,13 @@ function applyDynamicTexts(){
     topbarBox.style.background=topbarNoBg?'transparent':(cfg.cfgTopbarLogoBgColor||'#1a3a6b');
     topbarBox.innerHTML=customLogoBase64
       ?('<img src="'+customLogoBase64+'" alt="Logo" style="width:100%;height:100%;object-fit:contain;">')
-      :'<svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="#f4c430"/><circle cx="30" cy="30" r="22" fill="#1a3a6b"/><text x="30" y="27" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="Arial">JDC</text></svg>';
+      :'<svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="#f4c430"/><circle cx="30" cy="30" r="22" fill="#1a3a6b"/><text x="30" y="27" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="Arial">SA</text></svg>';
+  }
+
+  // Marca de agua del logo institucional de fondo (detrás de todos los paneles)
+  const bgWatermark=document.getElementById('bgWatermark');
+  if(bgWatermark){
+    bgWatermark.style.backgroundImage=customLogoBase64?('url("'+customLogoBase64+'")'):'none';
   }
 
   // Aplicar posiciones guardadas a la carátula real
@@ -4253,11 +4281,6 @@ function previewAnuncio2Admin(){
 }
 
 // El Anuncio 2 es 100% manual: solo depende del switch "activo" del admin.
-function debeVerAnuncio2(){
-  const a=getAnuncio2();
-  return !!a.activo;
-}
-
 function mostrarAnuncio2SiCorresponde(force){
   if(!force){
     if(anuncio2CerradoSesion || !debeVerAnuncio2()) return;
@@ -4337,11 +4360,12 @@ function saveAnuncio2Alumnos(){
   setAnuncio2Alumnos(checked);
 }
 
-// Override debeVerAnuncio2 to check per-alumno selection
+// El filtro de "alumnos seleccionados" solo tiene sentido para el propio alumno;
+// a docentes y padres de familia el Anuncio 2 les llega siempre que esté activo.
 function debeVerAnuncio2(){
   const a=getAnuncio2();
   if(!a.activo) return false;
-  // Check if this alumno is in the selected list
+  if(currentMode!=='alumno') return true;
   const sel = getAnuncio2Alumnos();
   if(sel.length > 0 && currentUser && currentUser.codigo){
     return sel.includes(currentUser.codigo);
