@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Inicio de Sesión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ===== REFINAMIENTO VISUAL: TIPOGRAFÍA Y DETALLES ===== */
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        h1, h2, h3, h4, h5, h6, .modal-title, .card-header {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+        .btn {
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            transition: all 0.2s ease;
+        }
+        .btn:active { transform: scale(0.98); }
+        .card {
+            transition: box-shadow 0.25s ease;
+        }
+        .badge { font-weight: 500; letter-spacing: 0.02em; }
+        .table thead th {
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            color: #6c757d;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.2rem rgba(4, 78, 77, 0.12);
+        }
+        .modal-content {
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+
+    
+    <!-- ============================================ -->
+    <!-- FIREBASE SDKs - VERSIÓN CORRECTA -->
+    <!-- ============================================ -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
+        // ============================================
+        // CONFIGURACIÓN DE FIREBASE
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdL70mCS1oX3QigWl3dr1glvoUk7MOKzM",
+            authDomain: "colegio-edunova.firebaseapp.com",
+            databaseURL: "https://colegio-edunova-default-rtdb.firebaseio.com",
+            projectId: "colegio-edunova",
+            storageBucket: "colegio-edunova.firebasestorage.app",
+            messagingSenderId: "350906702632",
+            appId: "1:350906702632:web:dd0f3bd165842fe10de1d",
+            measurementId: "G-6QKP7E3N97"
+        };
+
+        console.log('🚀 Iniciando Firebase...');
+
+        // Inicializar Firebase
+        try {
+            if (firebase.apps && firebase.apps.length > 0) {
+                console.log('🔥 Firebase ya estaba inicializado');
+            } else {
+                firebase.initializeApp(firebaseConfig);
+                console.log('🔥 Firebase inicializado correctamente');
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar:', error);
+        }
+
+        // Crear referencias
+        const database = firebase.database();
+        const USUARIOS_REF = database.ref('usuarios');
+        const NOTAS_REF = database.ref('notas');
+        const ASISTENCIAS_REF = database.ref('asistencias');
+        const ANUNCIOS_REF = database.ref('anuncios');
+        const CONFIG_REF = database.ref('configuracion');
+        const FECHAS_REF = database.ref('fechasModulos');
+        const NOMBRE_COLUMNAS_REF = database.ref('nombreColumnas');
+        const NOMBRES_MODULOS_REF = database.ref('nombresModulos');
+        const PERMISOS_REF = database.ref('permisos');
+        const HORARIOS_REF = database.ref('horarios');
+        const ENCUESTAS_REF = database.ref('encuestas_docentes');
+        const PAGOS_REF = database.ref('pagos');
+        const SOLICITUDES_REF = database.ref('solicitudes_cambio_contraseña');
+        const AUDITORIA_REF = database.ref('auditoria');
+        const EVOLUCION_REF = database.ref('evolucion_alumnos');
+
+        // Hacer disponibles globalmente
+        window.USUARIOS_REF = USUARIOS_REF;
+        window.NOTAS_REF = NOTAS_REF;
+        window.ASISTENCIAS_REF = ASISTENCIAS_REF;
+        window.ANUNCIOS_REF = ANUNCIOS_REF;
+        window.CONFIG_REF = CONFIG_REF;
+        window.FECHAS_REF = FECHAS_REF;
+        window.NOMBRE_COLUMNAS_REF = NOMBRE_COLUMNAS_REF;
+        window.NOMBRES_MODULOS_REF = NOMBRES_MODULOS_REF;
+        window.PERMISOS_REF = PERMISOS_REF;
+        window.HORARIOS_REF = HORARIOS_REF;
+        window.ENCUESTAS_REF = ENCUESTAS_REF;
+        window.PAGOS_REF = PAGOS_REF;
+        window.SOLICITUDES_REF = SOLICITUDES_REF;
+        window.AUDITORIA_REF = AUDITORIA_REF;
+        window.EVOLUCION_REF = EVOLUCION_REF;
+
+        console.log('✅ Referencias creadas:');
+        console.log('  - USUARIOS_REF:', typeof USUARIOS_REF);
+        console.log('  - CONFIG_REF:', typeof CONFIG_REF);
+
+        // Verificar conexión en tiempo real
+        const connectedRef = database.ref('.info/connected');
+        connectedRef.on('value', (snap) => {
+            const estadoEl = document.getElementById('estadoConexionLogin');
+            if (snap.val() === true) {
+                console.log('✅ Conectado a Firebase');
+                if (estadoEl) {
+                    estadoEl.textContent = '✅ Conectado';
+                    estadoEl.className = 'conectado';
+                }
+                const errorDiv = document.getElementById('loginError');
+                if (errorDiv) errorDiv.style.display = 'none';
+            } else {
+                console.warn('⚠️ Desconectado de Firebase');
+                if (estadoEl) {
+                    estadoEl.textContent = '❌ Desconectado';
+                    estadoEl.className = 'desconectado';
+                }
+            }
+        });
+
+        console.log('✅ firebase-config.js cargado correctamente');
+    </script>
+    
+    <style>
+        :root { --color-principal: #044E4D; --color-secundario: #FDF6EC; }
+        body {
+            background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            animation: fadeInUp 0.6s ease;
+            max-width: 420px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-card .logo { font-size: 60px; text-align: center; display: block; margin-bottom: 10px; }
+        .login-card h3 {
+            color: var(--color-principal);
+            font-weight: 700;
+            text-align: center;
+            font-size: 38px;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .login-card .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 14px; }
+        .btn-primary-custom {
+            background: var(--color-principal);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: white;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .btn-primary-custom:hover {
+            background: #06706F;
+            transform: scale(1.02);
+            color: white;
+        }
+        .btn-primary-custom:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+        }
+        .form-control:focus {
+            border-color: var(--color-principal);
+            box-shadow: 0 0 0 0.2rem rgba(4, 78, 77, 0.25);
+        }
+        .form-label { font-weight: 600; color: #2c3e50; margin-bottom: 5px; }
+        .alert-custom { background: #f8d7da; color: #721c24; border-radius: 10px; padding: 10px; display: none; }
+        .footer-login { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef; }
+        .footer-login small { color: #adb5bd; font-size: 12px; }
+        .logo-colegio-login { display: block; max-width: 150px; max-height: 80px; margin: 0 auto 15px auto; object-fit: contain; }
+        .ayuda-usuario {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        .ayuda-usuario i { margin-right: 4px; }
+        .input-mayuscula { text-transform: capitalize; }
+        #estadoConexionLogin {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="login-card">
+                    <div id="logoContainer"><span class="logo"></span></div>
+                    <h3 id="tituloColegio">EDUNOVA</h3>
+                    <p class="subtitle">Inicia sesión con tus credenciales</p>
+                    
+                    <div id="estadoConexionLogin" class="cargando">⏳ Conectando a Firebase...</div>
+                    
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-person"></i> Usuario</label>
+                            <input type="text" class="form-control input-mayuscula" id="inputUsuario" placeholder="" autocomplete="off">
+                            <div class="ayuda-usuario">
+                                <i class="bi bi-info-circle"></i>
+                                <span id="ayudaUsuario"><strong> </strong> Ingrese | <strong>Nombres Completos</strong> </span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-lock"></i> Contraseña</label>
+                            <input type="password" class="form-control" id="inputClave" placeholder="">
+                            <div class="ayuda-usuario">
+                                <i class="bi bi-info-circle"></i>
+                                <span id="ayudaClave"><strong> </strong> Ingrese | <strong>Clave</strong> </span>
+                            </div>
+                        </div>
+                        <div id="loginError" class="alert-custom mb-3">
+                            <i class="bi bi-exclamation-circle"></i> 
+                            <span id="errorMessage">Datos incorrectos</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom" id="btnLogin">
+                            <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                        </button>
+                    </form>
+
+                    <div class="footer-login">
+                        <small id="footerTexto">EDUNOVA</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ============================================
+        // FUNCIÓN: CAPITALIZAR CADA PALABRA
+        // ============================================
+        function capitalizarPalabras(texto) {
+            return texto.split(' ').map(palabra => {
+                if (palabra.length === 0) return '';
+                return palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase();
+            }).join(' ');
+        }
+
+        document.getElementById('inputUsuario').addEventListener('input', function(e) {
+            const texto = this.value;
+            const textoCapitalizado = capitalizarPalabras(texto);
+            if (texto !== textoCapitalizado) {
+                this.value = textoCapitalizado;
+                this.setSelectionRange(this.value.length, this.value.length);
+            }
+        });
+
+        // ============================================
+        // FUNCIÓN: QUITAR ACENTOS
+        // ============================================
+        function quitarAcentos(texto) {
+            if (!texto) return '';
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // ============================================
+        // NORMALIZAR TEXTO
+        // ============================================
+        function normalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // ============================================
+        // VERIFICAR SI TIENE NOMBRE Y APELLIDO
+        // ============================================
+        function tieneNombreYApellido(texto) {
+            const partes = texto.trim().split(/\s+/);
+            return partes.length >= 2;
+        }
+
+        // ============================================
+        // APLICAR CONFIGURACIÓN
+        // ============================================
+        function aplicarConfiguracion(config) {
+            config = config || {};
+            if (config.colorPrincipal) {
+                document.documentElement.style.setProperty('--color-principal', config.colorPrincipal);
+                document.documentElement.style.setProperty('--color-secundario', config.colorSecundario || '#2e86c1');
+            }
+            if (config.fuente) { document.body.style.fontFamily = config.fuente; }
+            if (config.tituloColegio) {
+                document.getElementById('tituloColegio').textContent = config.tituloColegio;
+                document.getElementById('footerTexto').textContent = config.tituloColegio;
+                document.title = config.tituloColegio;
+            }
+            const logoContainer = document.getElementById('logoContainer');
+            if (config.logoUrl && config.logoUrl.trim() !== '') {
+                logoContainer.innerHTML = `<img src="${config.logoUrl}" alt="Logo" class="logo-colegio-login" onerror="this.style.display='none';">`;
+            } else {
+                logoContainer.innerHTML = `<span class="logo"></span>`;
+            }
+        }
+
+        function cargarConfiguracion() {
+            if (typeof CONFIG_REF === 'undefined' || CONFIG_REF === null) {
+                console.error('❌ CONFIG_REF no está definido');
+                return;
+            }
+            CONFIG_REF.once('value').then(snapshot => {
+                const config = snapshot.val() || {};
+                aplicarConfiguracion(config);
+            }).catch(err => {
+                console.error('Error cargando configuración:', err);
+            });
+        }
+    </script>
+</body>
+</html>
+    <script>
+        // ============================================
+        // FUNCIÓN DE LOGIN CON VERIFICACIÓN DE ACCESO
+        // ============================================
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const usuario = document.getElementById('inputUsuario').value.trim();
+            const clave = document.getElementById('inputClave').value.trim();
+            const errorDiv = document.getElementById('loginError');
+            const errorMsg = document.getElementById('errorMessage');
+            const btn = document.getElementById('btnLogin');
+            
+            // Verificar que Firebase esté cargado
+            if (typeof USUARIOS_REF === 'undefined' || USUARIOS_REF === null) {
+                errorDiv.style.display = 'block';
+                errorMsg.textContent = '❌ Firebase no está cargado. Recarga la página.';
+                return;
+            }
+
+            if (!usuario || !clave) {
+                errorDiv.style.display = 'block';
+                errorMsg.textContent = '⚠️ Completa todos los campos';
+                return;
+            }
+
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+            btn.disabled = true;
+            errorDiv.style.display = 'none';
+
+            // Usar async/await para manejar la verificación de acceso
+            (async function realizarLogin() {
+                try {
+                    const snapshot = await USUARIOS_REF.once('value');
+                    const usuarios = snapshot.val() || [];
+                    let user = null;
+
+                    const usuarioNormalizado = normalizarTexto(usuario);
+
+                    // 1. ADMIN PRINCIPAL (DNI + DNI)
+                    if (!user) {
+                        user = usuarios.find(u => 
+                            u.dni === usuario && 
+                            u.password === clave && 
+                            u.rol === 'admin_principal'
+                        );
+                    }
+
+                    // 2. ADMIN SECUNDARIO (DNI + DNI)
+                    if (!user) {
+                        user = usuarios.find(u => 
+                            u.dni === usuario && 
+                            u.password === clave && 
+                            u.rol === 'admin_secundario'
+                        );
+                    }
+
+                    // 3. PADRE (DNI del padre + DNI del hijo)
+                    if (!user) {
+                        user = usuarios.find(u => 
+                            u.dni === usuario && 
+                            u.hijo_dni === clave && 
+                            u.rol === 'padre'
+                        );
+                    }
+
+                    // 4. DOCENTE (Nombre Completo + DNI)
+                    if (!user) {
+                        if (!tieneNombreYApellido(usuario)) {
+                            errorDiv.style.display = 'block';
+                            errorMsg.textContent = '⚠️ Los docentes deben ingresar su nombre completo';
+                            btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Ingresar';
+                            btn.disabled = false;
+                            return;
+                        }
+                        
+                        user = usuarios.find(u => {
+                            if (u.rol !== 'docente') return false;
+                            if (u.password !== clave) return false;
+                            const nombreBD = normalizarTexto(u.nombre || u.nombres || '');
+                            return nombreBD === usuarioNormalizado;
+                        });
+                    }
+
+                    // 5. ALUMNO (Nombre Completo + DNI)
+                    if (!user) {
+                        if (!tieneNombreYApellido(usuario)) {
+                            errorDiv.style.display = 'block';
+                            errorMsg.textContent = '⚠️ Los alumnos deben ingresar su nombre completo';
+                            btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Ingresar';
+                            btn.disabled = false;
+                            return;
+                        }
+                        
+                        user = usuarios.find(u => {
+                            if (u.rol !== 'alumno') return false;
+                            if (u.password !== clave) return false;
+                            const nombreBD = normalizarTexto(u.nombre || u.nombres || '');
+                            return nombreBD === usuarioNormalizado;
+                        });
+                    }
+
+                    if (!user) {
+                        errorDiv.style.display = 'block';
+                        errorMsg.textContent = '❌ Credenciales incorrectas. Verifica tus datos.';
+                        btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Ingresar';
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // ============================================
+                    // VERIFICAR ACCESO POR ROL (CORREGIDO)
+                    // ============================================
+                    // El admin principal SIEMPRE tiene acceso
+                    if (user.rol !== 'admin_principal') {
+                        try {
+                            // Verificar si CONFIG_REF está disponible
+                            if (typeof CONFIG_REF !== 'undefined' && CONFIG_REF !== null) {
+                                const accesosRef = CONFIG_REF.child('accesos');
+                                const accesoSnap = await accesosRef.child(user.rol).once('value');
+                                const tieneAcceso = accesoSnap.val();
+                                
+                                // Si el valor es false, está bloqueado
+                                // Si es undefined o null, por defecto está permitido (true)
+                                if (tieneAcceso === false) {
+                                    errorDiv.style.display = 'block';
+                                    errorMsg.textContent = '    En mantenimiento ó consulte con administración.';
+                                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Ingresar';
+                                    btn.disabled = false;
+                                    return;
+                                }
+                            } else {
+                                console.warn('⚠️ CONFIG_REF no disponible, permitiendo acceso por defecto');
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Error verificando acceso:', error);
+                            // Si hay error, permitir acceso por defecto
+                        }
+                    } else {
+                        console.log('✅ Admin Principal - Acceso garantizado');
+                    }
+
+                    // Crear sesión
+                    const session = {
+                        dni: user.dni,
+                        nombre: user.nombre || user.nombres || '',
+                        rol: user.rol,
+                        grado: user.grado || '',
+                        seccion: user.seccion || '',
+                        nivel: user.nivel || '',
+                        materias: user.materias || [],
+                        hijo_dni: user.hijo_dni || '',
+                        esSuperAdmin: user.esSuperAdmin || false,
+                        sede: user.sede || '',
+                        password: user.password || ''
+                    };
+                    sessionStorage.setItem('session', JSON.stringify(session));
+
+                    // Registrar login exitoso en auditoría
+                    if (typeof window.AUDITORIA !== 'undefined' && window.AUDITORIA.registrar) {
+                        window.AUDITORIA.registrar(
+                            'login_exitoso',
+                            'baja',
+                            session.dni,
+                            `Inicio de sesión exitoso como ${session.rol}`,
+                            { rol: session.rol }
+                        );
+                    }
+
+                    const roles = {
+                        'admin_principal': 'admin-principal.html',
+                        'admin_secundario': 'admin-secundario.html',
+                        'docente': 'docente.html',
+                        'alumno': 'alumno.html',
+                        'padre': 'padre.html'
+                    };
+                    
+                    console.log('✅ Login exitoso:', user.nombre || user.nombres, '→', user.rol);
+                    
+                    window.location.href = roles[user.rol] || 'index.html';
+
+                } catch (error) {
+                    console.error('Error en login:', error);
+                    errorDiv.style.display = 'block';
+                    errorMsg.textContent = '❌ Error al conectar con Firebase: ' + error.message;
+                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Ingresar';
+                    btn.disabled = false;
+                }
+            })();
+        });
+    </script>
+</body>
+</html>
+    <script>
+        // ============================================
+        // PERMITIR ENTER PARA ENVIAR
+        // ============================================
+        document.getElementById('inputClave').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        document.getElementById('inputUsuario').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('inputClave').focus();
+            }
+        });
+
+        // ============================================
+        // INICIALIZAR
+        // ============================================
+        window.onload = function() {
+            // Verificar si Firebase está disponible
+            if (typeof CONFIG_REF !== 'undefined' && CONFIG_REF !== null) {
+                cargarConfiguracion();
+            } else {
+                console.warn('⚠️ CONFIG_REF no disponible');
+            }
+            
+            console.log('✅ Sistema Escolar - Login');
+            document.getElementById('inputUsuario').focus();
+            
+            // Verificar sesión activa
+            const session = JSON.parse(sessionStorage.getItem('session') || 'null');
+            if (session) {
+                const roles = {
+                    'admin_principal': 'admin-principal.html',
+                    'admin_secundario': 'admin-secundario.html',
+                    'docente': 'docente.html',
+                    'alumno': 'alumno.html',
+                    'padre': 'padre.html'
+                };
+                if (roles[session.rol]) {
+                    window.location.href = roles[session.rol];
+                }
+            }
+        };
+    </script>
+</body>
+</html>
