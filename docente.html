@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Docente - Sistema Escolar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ===== REFINAMIENTO VISUAL: TIPOGRAFÍA Y DETALLES ===== */
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        h1, h2, h3, h4, h5, h6, .modal-title, .card-header {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+        .btn {
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            transition: all 0.2s ease;
+        }
+        .btn:active { transform: scale(0.98); }
+        .card {
+            transition: box-shadow 0.25s ease;
+        }
+        .badge { font-weight: 500; letter-spacing: 0.02em; }
+        .table thead th {
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            color: #6c757d;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.2rem rgba(4, 78, 77, 0.12);
+        }
+        .modal-content {
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- html2pdf para generar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    
+    <style>
+        :root { --color-principal: #044E4D; --color-secundario: #FDF6EC; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
+        .navbar-custom { background: #044E4D; padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .navbar-custom .navbar-brand { color: white; font-weight: 600; }
+        .navbar-custom .navbar-brand i { margin-right: 10px; }
+        .navbar-custom .navbar-text { color: rgba(255,255,255,0.9); }
+        .navbar-custom .btn-outline-light:hover { background: rgba(255,255,255,0.1); }
+        .card { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background: transparent; border-bottom: 2px solid #f0f2f5; font-weight: 600; padding: 15px 20px; }
+        .card-header i { margin-right: 10px; }
+        .btn-accion { padding: 5px 10px; border-radius: 8px; font-size: 12px; margin: 2px; }
+        .asistio { background-color: #d4edda !important; }
+        .tardanza { background-color: #fff3cd !important; }
+        .no_vino { background-color: #f8d7da !important; }
+        .modal-content { border-radius: 20px; }
+        .table-docente th, .table-docente td { text-align: center; vertical-align: middle; }
+        .badge-promedio { font-size: 14px !important; padding: 6px 14px !important; font-weight: 700 !important; }
+        .badge-promedio.rojo { background-color: #f8d7da !important; color: #dc3545 !important; }
+        .badge-promedio.azul { background-color: #d1ecf1 !important; color: #0c5460 !important; }
+        .badge-promedio.sin-nota { background-color: #e9ecef !important; color: #6c757d !important; }
+        .badge-promedio.pendiente { background-color: #fff3cd !important; color: #856404 !important; font-size: 11px !important; padding: 4px 10px !important; }
+        #estadoConexion { display: none !important; }
+        .nota-label { font-weight: 600; font-size: 14px; }
+        .nota-input { text-align: center; font-size: 18px; font-weight: bold; padding: 10px; width: 100%; }
+        .nota-input-small { text-align: center; font-size: 16px; font-weight: 600; padding: 6px 8px; width: 100%; border: 2px solid #e9ecef; border-radius: 6px; }
+        .nota-input-small:focus { border-color: var(--color-principal); outline: none; }
+        .semanas-container { background: #f8f9fa; border-radius: 10px; padding: 15px; border: 1px solid #e9ecef; }
+        .semanas-container .row { margin: 0; }
+        .semanas-container .col { padding: 0 5px; }
+        .semanas-container label { font-size: 12px; font-weight: 600; color: #495057; display: block; margin-bottom: 3px; text-align: center; }
+        .semanas-container input { text-align: center; font-size: 16px; font-weight: 600; padding: 6px 4px; width: 100%; border: 2px solid #e9ecef; border-radius: 6px; background: white; }
+        .semanas-container input:focus { border-color: var(--color-principal); outline: none; box-shadow: 0 0 0 0.2rem rgba(4, 78, 77, 0.15); }
+        .promedio-semanas { font-weight: 700; color: var(--color-principal); font-size: 16px; background: white; padding: 4px 12px; border-radius: 6px; border: 2px solid var(--color-principal); display: inline-block; }
+        .promedio-semanas.vacio { border-color: #6c757d; color: #6c757d; font-style: italic; }
+        .alerta-admin { background-color: #f8d7da; border: 3px solid #dc3545; border-radius: 15px; padding: 30px 20px; text-align: center; margin: 20px 0; animation: pulse-alerta 1.5s ease-in-out infinite; }
+        .alerta-admin i { font-size: 48px; color: #dc3545; display: block; margin-bottom: 15px; }
+        .alerta-admin h3 { color: #721c24; font-weight: 700; font-size: 24px; }
+        .alerta-admin p { color: #721c24; font-size: 16px; margin-top: 10px; }
+        @keyframes pulse-alerta { 0% { border-color: #dc3545; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 50% { border-color: #ff6b6b; box-shadow: 0 0 20px 10px rgba(220, 53, 69, 0.1); } 100% { border-color: #dc3545; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } }
+        .badge-estado-modulo { font-size: 11px; padding: 3px 10px; border-radius: 12px; display: inline-block; margin-left: 5px; }
+        .badge-estado-modulo.activo { background: #d4edda; color: #155724; }
+        .badge-estado-modulo.proximo { background: #fff3cd; color: #856404; }
+        .badge-estado-modulo.cerrado { background: #f8d7da; color: #721c24; }
+        .btn-modulo-bloqueado { background: #e9ecef !important; color: #6c757d !important; cursor: not-allowed !important; opacity: 0.7; }
+        .btn-modulo-sin-nota { background: #e9ecef !important; color: #6c757d !important; cursor: default !important; opacity: 0.6; }
+        .toast-save { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 15px 30px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); z-index: 9999; display: none; animation: slideUp 0.5s ease; font-weight: 600; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .toast-save i { margin-right: 10px; }
+        #firebaseError { margin: 10px 0; }
+
+        @keyframes pulse-punto { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+
+        .entrega-item-docente { background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #17a2b8; transition: all 0.3s; position: relative; }
+        .entrega-item-docente:hover { background: #f0f2f5; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .entrega-item-docente.vencida { border-left-color: #dc3545; background: #fff5f5; }
+        .entrega-item-docente .alumno-nombre { font-weight: 600; color: #2c3e50; font-size: 15px; }
+        .entrega-item-docente .alumno-dni { font-size: 12px; color: #6c757d; margin-left: 8px; }
+        .entrega-item-docente .entrega-fecha { font-size: 12px; color: #6c757d; }
+        .entrega-item-docente .entrega-archivo { margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .entrega-item-docente .entrega-archivo .archivo-icono { font-size: 24px; }
+        .entrega-item-docente .entrega-archivo .archivo-nombre { font-weight: 500; color: #2c3e50; word-break: break-all; }
+        .entrega-item-docente .entrega-archivo .archivo-tamaño { font-size: 12px; color: #6c757d; }
+        .entrega-item-docente .entrega-comentario { margin-top: 6px; font-size: 13px; color: #495057; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e9ecef; }
+        .entrega-item-docente .entrega-estado { font-weight: 600; padding: 3px 12px; border-radius: 20px; font-size: 11px; display: inline-block; margin-top: 6px; }
+        .entrega-item-docente .entrega-estado.pendiente { background: #fff3cd; color: #856404; }
+        .entrega-item-docente .entrega-estado.calificada { background: #d4edda; color: #155724; }
+        .entrega-item-docente .entrega-estado.vencida { background: #f8d7da; color: #721c24; }
+
+        .btn-archivo { padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-archivo:hover { transform: scale(1.03); }
+        .btn-archivo.descargar { background: #0d6efd; color: white; }
+        .btn-archivo.descargar:hover { background: #0b5ed7; }
+        .btn-archivo.ver { background: #198754; color: white; }
+        .btn-archivo.ver:hover { background: #157347; }
+        .btn-archivo.copiar { background: #6c757d; color: white; }
+        .btn-archivo.copiar:hover { background: #5a6268; }
+        .btn-archivo.enlace { background: #17a2b8; color: white; }
+        .btn-archivo.enlace:hover { background: #138496; }
+        .btn-archivo.pdf { background: #dc3545; color: white; }
+        .btn-archivo.pdf:hover { background: #c82333; }
+        .btn-archivo.descargar-archivo { background: #28a745; color: white; }
+        .btn-archivo.descargar-archivo:hover { background: #218838; }
+        .btn-archivo.referenciado { background: #fd7e14; color: white; }
+        .btn-archivo.referenciado:hover { background: #e06b0a; }
+
+        .badge-tipo-archivo { font-size: 10px; padding: 2px 10px; border-radius: 12px; font-weight: 600; text-transform: uppercase; display: inline-block; }
+        .badge-tipo-archivo.pdf { background: #f8d7da; color: #dc3545; }
+        .badge-tipo-archivo.word { background: #cfe2ff; color: #0d6efd; }
+        .badge-tipo-archivo.excel { background: #d1e7dd; color: #198754; }
+        .badge-tipo-archivo.ppt { background: #fff3cd; color: #856404; }
+        .badge-tipo-archivo.image { background: #e8d5f5; color: #6f42c1; }
+        .badge-tipo-archivo.zip { background: #fce4ec; color: #dc3545; }
+        .badge-tipo-archivo.text { background: #e9ecef; color: #495057; }
+        .badge-tipo-archivo.other { background: #e9ecef; color: #6c757d; }
+
+        .resumen-entregas { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 12px; }
+        .resumen-entregas .item { text-align: center; }
+        .resumen-entregas .item .numero { font-size: 24px; font-weight: 700; color: var(--color-principal); }
+        .resumen-entregas .item .label { font-size: 11px; color: #6c757d; }
+        .resumen-entregas .item .numero.rojo { color: #dc3545; }
+        .resumen-entregas .item .numero.verde { color: #28a745; }
+        .resumen-entregas .item .numero.amarillo { color: #ffc107; }
+        .resumen-entregas .item .numero.azul { color: #17a2b8; }
+
+        .entregas-container { max-height: 500px; overflow-y: auto; padding-right: 5px; }
+        .entregas-container::-webkit-scrollbar { width: 6px; }
+        .entregas-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .entregas-container::-webkit-scrollbar-thumb { background: #c1c7cd; border-radius: 10px; }
+        .entregas-container::-webkit-scrollbar-thumb:hover { background: #a8b0b8; }
+        .modal-entregas .modal-header { background: var(--color-principal); color: white; }
+        .modal-entregas .modal-header .btn-close { filter: invert(1); }
+
+        .examen-card-docente { background: white; border-radius: 15px; padding: 18px; margin-bottom: 15px; border-left: 5px solid #17a2b8; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: all 0.3s; }
+        .examen-card-docente:hover { box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .examen-card-docente .examen-titulo { font-weight: 700; font-size: 17px; color: #17a2b8; }
+        .examen-card-docente .examen-info { font-size: 13px; color: #6c757d; }
+        .examen-card-docente .examen-estado { font-weight: 600; padding: 4px 14px; border-radius: 20px; font-size: 12px; display: inline-block; }
+        .examen-card-docente .examen-estado.activo { background: #d4edda; color: #155724; }
+        .examen-card-docente .examen-estado.cerrado { background: #f8d7da; color: #721c24; }
+        .examen-card-docente .examen-estado.proximo { background: #fff3cd; color: #856404; }
+        .examen-card-docente .examen-estado.expirado { background: #f8d7da; color: #721c24; }
+        .examen-card-docente .examen-estado.disponible { background: #d4edda; color: #155724; }
+        .pregunta-item { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+        .pregunta-item .pregunta-numero { font-weight: 700; color: var(--color-principal); margin-bottom: 6px; display: block; }
+        .opcion-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .opcion-item .letra { font-weight: 700; min-width: 22px; color: #6c757d; }
+        .import-word-box { background: #eef7fb; border: 1.5px dashed #17a2b8; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+
+        .modal-notas .modal-header { background: var(--color-principal); color: white; }
+        .modal-notas .modal-header .btn-close { filter: invert(1); }
+        .modal-notas .nota-grupo { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: 1px solid #e9ecef; }
+        .modal-notas .nota-grupo .nota-campo { font-weight: 600; font-size: 14px; color: #2c3e50; }
+        .modal-notas .nota-grupo input { text-align: center; font-size: 18px; font-weight: 700; padding: 8px; width: 100px; border: 2px solid #e9ecef; border-radius: 8px; }
+        .modal-notas .nota-grupo input:focus { border-color: var(--color-principal); outline: none; box-shadow: 0 0 0 0.2rem rgba(4, 78, 77, 0.15); }
+        .modal-notas .nota-grupo input:disabled { background: #e9ecef; cursor: not-allowed; }
+        .modal-notas .pm-calculado { font-weight: 700; font-size: 22px; color: var(--color-principal); }
+        .modal-notas .pm-calculado.sin-nota { color: #6c757d; font-style: italic; font-size: 16px; }
+
+        .pdf-entrega-container {
+            background: white;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            font-family: 'Times New Roman', serif;
+        }
+        .pdf-entrega-container .titulo {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #044E4D;
+            border-bottom: 3px double #044E4D;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .pdf-entrega-container .subtitulo {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #044E4D;
+            margin-bottom: 20px;
+        }
+        .pdf-entrega-container .info-entrega {
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        .pdf-entrega-container .info-entrega .fila {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .pdf-entrega-container .info-entrega .fila .label {
+            font-weight: 600;
+            width: 150px;
+            flex-shrink: 0;
+        }
+        .pdf-entrega-container .info-entrega .fila .valor {
+            flex: 1;
+        }
+        .pdf-entrega-container .contenido-entrega {
+            border: 1px solid #333;
+            padding: 15px;
+            min-height: 200px;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .pdf-entrega-container .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            margin-top: 20px;
+        }
+        .pdf-entrega-container .archivo-info {
+            background: #f8f9fa;
+            border: 1px dashed #6c757d;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .pdf-entrega-container .archivo-info i {
+            font-size: 48px;
+            color: #dc3545;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .pdf-entrega-container .archivo-info .nombre {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .pdf-entrega-container .archivo-info .tamaño {
+            color: #6c757d;
+            font-size: 13px;
+        }
+        .pdf-entrega-container .archivo-info .mensaje {
+            color: #856404;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .alerta-archivo-referenciado {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .alerta-archivo-referenciado i {
+            font-size: 24px;
+            color: #856404;
+        }
+        .alerta-archivo-referenciado .mensaje {
+            color: #856404;
+            font-size: 13px;
+        }
+        .alerta-archivo-referenciado .mensaje strong {
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive { font-size: 12px; }
+            .nota-input { font-size: 14px; padding: 6px; }
+            .nota-input-small { font-size: 13px; }
+            .entrega-item-docente .entrega-archivo { flex-direction: column; align-items: flex-start; }
+            .btn-archivo { width: 100%; justify-content: center; }
+            .resumen-entregas { grid-template-columns: repeat(2, 1fr); }
+            .alerta-archivo-referenciado { flex-direction: column; text-align: center; }
+            .modal-notas .nota-grupo input { width: 80px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand"><i class="bi bi-person-badge"></i> Panel Docente</span>
+            <span class="navbar-text" id="docenteNombre">Usuario</span>
+            <div id="estadoConexion" class="cargando" style="display:none;">⏳ Conectando...</div>
+            <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i> Salir
+            </button>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div id="firebaseError" style="display:none;"></div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="fw-bold">Nivel</label>
+                                <select class="form-control" id="nivelSelect">
+                                    <option value="Primaria">Primaria</option>
+                                    <option value="Secundaria" selected>Secundaria</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold">Grado</label>
+                                <select class="form-control" id="gradoSelect">
+                                    <option value="Primero">Primero</option>
+                                    <option value="Segundo">Segundo</option>
+                                    <option value="Tercero" selected>Tercero</option>
+                                    <option value="Cuarto">Cuarto</option>
+                                    <option value="Quinto">Quinto</option>
+                                    <option value="Sexto">Sexto</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold">Sección</label>
+                                <select class="form-control" id="seccionSelect">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-primary w-100" id="btnCargarAlumnos">
+                                    <i class="bi bi-search"></i> Cargar Alumnos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="grades-tab" data-bs-toggle="tab" data-bs-target="#grades">
+                            <i class="bi bi-book"></i> Notas
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance">
+                            <i class="bi bi-calendar-check"></i> Asistencias
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="examenes-tab" data-bs-toggle="tab" data-bs-target="#examenes">
+                            <i class="bi bi-file-earmark-check"></i> Exámenes
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="grades">
+                        <div id="alumnosList">
+                            <div class="alert alert-info">Selecciona un nivel, grado, sección y haz clic en "Cargar Alumnos"</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="attendance">
+                        <div id="attendanceList">
+                            <div class="alert alert-info">Selecciona un nivel, grado, sección y haz clic en "Cargar Alumnos"</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="examenes">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-file-earmark-check"></i> Gestión de Exámenes
+                                <button class="btn btn-primary btn-sm float-end" id="btnCrearExamen">
+                                    <i class="bi bi-plus-circle"></i> Crear Examen
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="listaExamenesDocente">
+                                    <div class="alert alert-info">Cargando exámenes...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL PARA EDITAR NOTAS ===== -->
+    <div class="modal fade modal-notas" id="modalEditarNotas" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Notas - <span id="modalNotasAlumno">Alumno</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="notasAlumnoDni">
+                    <input type="hidden" id="notasModulo">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle"></i>
+                        Ingresa las notas para cada campo. El promedio se calculará automáticamente.
+                        <br><small>Nota mínima: 0 | Nota máxima: 20</small>
+                    </div>
+                    
+                    <div id="notasEditContainer">
+                        <div class="nota-grupo">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <span class="nota-campo" id="notasLabelEC">EC</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" class="form-control" id="notasInputEC" min="0" max="20" step="0.5">
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Evaluación Continua</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nota-grupo">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <span class="nota-campo" id="notasLabelEP">EP</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" class="form-control" id="notasInputEP" min="0" max="20" step="0.5">
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Evaluación Parcial</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nota-grupo">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <span class="nota-campo" id="notasLabelED">ED</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" class="form-control" id="notasInputED" min="0" max="20" step="0.5">
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Evaluación de Desempeño</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nota-grupo" style="background: #e8f4fd; border-color: #17a2b8;">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <span class="nota-campo" style="color: #0c5460;">PM</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="pm-calculado sin-nota" id="notasPMCalculado">-</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Promedio Automático</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="badge bg-secondary" id="notasModuloLabel">Módulo I</span>
+                            <span class="badge bg-info" id="notasEstadoModulo">Activo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarNotas">
+                        <i class="bi bi-save"></i> Guardar Notas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EXAMEN DOCENTE -->
+    <div class="modal fade" id="modalExamenDocente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #17a2b8; color: white;">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-check"></i> <span id="modalExamenTitulo">Crear Examen</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formExamenDocente">
+                        <input type="hidden" id="examenEditId">
+                        <div class="row">
+                            <div class="col-md-8"><div class="mb-3"><label class="form-label fw-bold">Título <span class="text-danger">*</span></label><input type="text" class="form-control" id="exTituloDocente" required></div></div>
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Materia <span class="text-danger">*</span></label><select class="form-control" id="exMateriaDocente" required><option value="">Seleccione</option></select></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Nivel</label><select class="form-control" id="exNivelDocente"><option value="Primaria">Primaria</option><option value="Secundaria">Secundaria</option></select></div></div>
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Grado</label><select class="form-control" id="exGradoDocente"><option value="Primero">Primero</option><option value="Segundo">Segundo</option><option value="Tercero">Tercero</option><option value="Cuarto">Cuarto</option><option value="Quinto">Quinto</option><option value="Sexto">Sexto</option></select></div></div>
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Sección</label><select class="form-control" id="exSeccionDocente"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Fecha Examen</label><input type="date" class="form-control" id="exFechaDocente" required></div></div>
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Hora Inicio</label>
+                                <div class="d-flex gap-1 align-items-center flex-wrap">
+                                    <select class="form-control" id="exHoraDocenteHora" style="max-width:70px;" onchange="actualizarHoraDocenteDesdeSelects()"></select>
+                                    <span>:</span>
+                                    <select class="form-control" id="exHoraDocenteMinuto" style="max-width:70px;" onchange="actualizarHoraDocenteDesdeSelects()"></select>
+                                    <select class="form-control" id="exHoraDocenteAmPm" style="max-width:80px;" onchange="actualizarHoraDocenteDesdeSelects()">
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="exHoraDocente" value="08:00" required>
+                            </div></div>
+                            <div class="col-md-4"><div class="mb-3"><label class="form-label fw-bold">Duración (minutos)</label><input type="number" class="form-control" id="exDuracionDocente" value="30" min="5" max="180" required></div></div>
+                        </div>
+                        <hr>
+                        <div class="import-word-box">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <strong><i class="bi bi-file-earmark-word"></i> Importar preguntas desde Word (.docx)</strong>
+                                    <div class="small text-muted mt-1">
+                                        Formato requerido en el documento:<br>
+                                        <code>1. Texto de la pregunta</code><br>
+                                        <code>a) Opción 1&nbsp;&nbsp;b) Opción 2&nbsp;&nbsp;c) Opción 3&nbsp;&nbsp;d) Opción 4</code> (cada opción en su propia línea)<br>
+                                        No incluyas la respuesta correcta en el Word: la eliges aquí después de importar.
+                                    </div>
+                                </div>
+                                <div>
+                                    <input type="file" id="inputWordExamen" accept=".docx" class="form-control form-control-sm" style="max-width:220px;">
+                                </div>
+                            </div>
+                            <div id="importWordStatus" class="mt-2"></div>
+                        </div>
+                        <h6><i class="bi bi-list-check"></i> Preguntas</h6>
+                        <div id="preguntasContainerDocente"></div>
+                        <button type="button" class="btn btn-success btn-sm mt-2" id="btnAgregarPregunta"><i class="bi bi-plus-circle"></i> Agregar Pregunta</button>
+                        <hr>
+                        <div class="alert alert-info"><i class="bi bi-info-circle"></i> <strong>Nota:</strong> Los alumnos podrán rendir este examen en la fecha y hora indicadas. A cada alumno se le mostrará el orden de las alternativas mezclado de forma distinta, por lo que la ubicación de la respuesta correcta variará entre alumnos.</div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarExamen"><i class="bi bi-save"></i> Guardar Examen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastSave" class="toast-save"><i class="bi bi-check-circle-fill"></i> Operación realizada correctamente</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================
+    // CONFIGURACIÓN DE FIREBASE
+    // ============================================
+    var firebaseConfig = {
+        apiKey: "AIzaSyAdL70mCS1oX3QigWl3dr1glvoUk7MOKzM",
+        authDomain: "colegio-edunova.firebaseapp.com",
+        databaseURL: "https://colegio-edunova-default-rtdb.firebaseio.com",
+        projectId: "colegio-edunova",
+        storageBucket: "colegio-edunova.firebasestorage.app",
+        messagingSenderId: "350906702632",
+        appId: "1:350906702632:web:dd0f3bd165842fe10de1d",
+        measurementId: "G-6QKP7E3N97"
+    };
+
+    console.log('🚀 Iniciando Firebase en docente.html...');
+
+    try {
+        if (firebase.apps && firebase.apps.length > 0) {
+            console.log('🔥 Firebase ya estaba inicializado');
+        } else {
+            firebase.initializeApp(firebaseConfig);
+            console.log('🔥 Firebase inicializado correctamente');
+        }
+    } catch (error) {
+        console.error('❌ Error al inicializar Firebase:', error);
+        document.getElementById('firebaseError').innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> <strong>Error al inicializar Firebase:</strong> ' + error.message + '<br><button class="btn btn-primary btn-sm mt-2" onclick="location.reload()">Recargar</button></div>';
+        document.getElementById('firebaseError').style.display = 'block';
+    }
+
+    var database = firebase.database();
+    var USUARIOS_REF = database.ref('usuarios');
+    var NOTAS_REF = database.ref('notas');
+    var ASISTENCIAS_REF = database.ref('asistencias');
+    var ANUNCIOS_REF = database.ref('anuncios');
+    var CONFIG_REF = database.ref('configuracion');
+    var FECHAS_REF = database.ref('fechasModulos');
+    var NOMBRE_COLUMNAS_REF = database.ref('nombreColumnas');
+    var NOMBRES_MODULOS_REF = database.ref('nombresModulos');
+    var PERMISOS_REF = database.ref('permisos');
+    var HORARIOS_REF = database.ref('horarios');
+    var ENCUESTAS_REF = database.ref('encuestas_docentes');
+    var PAGOS_REF = database.ref('pagos');
+    var SOLICITUDES_REF = database.ref('solicitudes_cambio_contraseña');
+    var AUDITORIA_REF = database.ref('auditoria');
+    var EVOLUCION_REF = database.ref('evolucion_alumnos');
+    var EXAMENES_REF = database.ref('examenes');
+    var RESPUESTAS_EXAMEN_REF = database.ref('respuestas_examen');
+
+    var session = JSON.parse(sessionStorage.getItem('session') || 'null');
+    if (!session || session.rol !== 'docente') {
+        window.location.href = 'index.html';
+    }
+    document.getElementById('docenteNombre').textContent = session.nombre || 'Docente';
+
+    var nombreColumnasCache = { EC: 'EC', EP: 'EP', ED: 'ED' };
+    var nombresModulosCache = { I: 'Módulo I', II: 'Módulo II', III: 'Módulo III', IV: 'Módulo IV' };
+    var fechasModulosCache = {};
+    var examenesCache = [];
+
+    function mostrarToast(mensaje, tipo) {
+        var toast = document.getElementById('toastSave');
+        if (!toast) return;
+        var colores = { success: '#28a745', error: '#dc3545', warning: '#ffc107' };
+        toast.innerHTML = '<i class="bi ' + (tipo === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill') + '"></i> ' + mensaje;
+        toast.style.background = colores[tipo] || colores.success;
+        toast.style.color = tipo === 'warning' ? '#212529' : 'white';
+        toast.style.display = 'block';
+        setTimeout(function() { toast.style.display = 'none'; }, 3000);
+    }
+
+    function generarId() {
+        return Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function redondearValor(valor) {
+        if (valor === '-' || valor === undefined || valor === null || isNaN(valor)) return '-';
+        var num = parseFloat(valor);
+        if (isNaN(num)) return '-';
+        return (Math.round(num * 10) / 10).toFixed(1);
+    }
+
+    function getColorClase(valor) {
+        if (valor === '-' || isNaN(parseFloat(valor))) return 'sin-nota';
+        var num = parseFloat(valor);
+        if (num < 10.5) return 'rojo';
+        return 'azul';
+    }
+
+    function getNombreColumnas() { return nombreColumnasCache; }
+    function getNombresModulos() { return nombresModulosCache; }
+
+    function formatearFechaHora(fechaStr) {
+        if (!fechaStr) return 'Sin fecha';
+        try {
+            var fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) return fechaStr;
+            return fecha.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return fechaStr;
+        }
+    }
+
+    function formatearFechaParaInput(fechaStr) {
+        if (!fechaStr) return '';
+        try {
+            if (fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return fechaStr;
+            }
+            var fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) return '';
+            var year = fecha.getFullYear();
+            var month = String(fecha.getMonth() + 1).padStart(2, '0');
+            var day = String(fecha.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function formatearFechaParaMostrar(fechaStr) {
+        if (!fechaStr) return 'Sin fecha';
+        try {
+            if (fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                var partes = fechaStr.split('-');
+                var year = parseInt(partes[0]);
+                var month = parseInt(partes[1]);
+                var day = parseInt(partes[2]);
+                var fecha = new Date(Date.UTC(year, month - 1, day));
+                return fecha.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+            var fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) return fechaStr;
+            var year = fecha.getUTCFullYear();
+            var month = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+            var day = String(fecha.getUTCDate()).padStart(2, '0');
+            return day + '/' + month + '/' + year;
+        } catch (e) {
+            return fechaStr;
+        }
+    }
+
+    function formatearHoraParaMostrar(horaStr) {
+        if (!horaStr) return '--:--';
+        if (horaStr.match(/^\d{2}:\d{2}$/)) {
+            return horaStr;
+        }
+        try {
+            var partes = horaStr.split(':');
+            if (partes.length === 2) {
+                var h = parseInt(partes[0]);
+                var m = parseInt(partes[1]);
+                if (!isNaN(h) && !isNaN(m)) {
+                    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                }
+            }
+        } catch (e) {}
+        return horaStr;
+    }
+
+    function formatearTamaño(bytes) {
+        if (!bytes || isNaN(bytes)) return '0 B';
+        var sizes = ['B', 'KB', 'MB', 'GB'];
+        var i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+    }
+
+    function obtenerTipoArchivo(nombre) {
+        if (!nombre) return 'other';
+        var ext = nombre.split('.').pop().toLowerCase();
+        var tipos = {
+            'pdf': 'pdf', 'doc': 'word', 'docx': 'word',
+            'xls': 'excel', 'xlsx': 'excel',
+            'ppt': 'ppt', 'pptx': 'ppt',
+            'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image',
+            'zip': 'zip', 'rar': 'zip',
+            'txt': 'text'
+        };
+        return tipos[ext] || 'other';
+    }
+
+    function obtenerIconoArchivo(tipo) {
+        var iconos = {
+            'pdf': 'bi-file-earmark-pdf',
+            'word': 'bi-file-earmark-word',
+            'excel': 'bi-file-earmark-excel',
+            'ppt': 'bi-file-earmark-ppt',
+            'image': 'bi-file-earmark-image',
+            'zip': 'bi-file-earmark-zip',
+            'text': 'bi-file-earmark-text',
+            'other': 'bi-file-earmark'
+        };
+        return iconos[tipo] || 'bi-file-earmark';
+    }
+
+    function cargarNombreColumnas() {
+        if (typeof NOMBRE_COLUMNAS_REF === 'undefined' || NOMBRE_COLUMNAS_REF === null) return Promise.resolve();
+        return NOMBRE_COLUMNAS_REF.once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (data) nombreColumnasCache = data;
+        });
+    }
+
+    function cargarNombresModulos() {
+        if (typeof NOMBRES_MODULOS_REF === 'undefined' || NOMBRES_MODULOS_REF === null) return Promise.resolve();
+        return NOMBRES_MODULOS_REF.once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (data) nombresModulosCache = data;
+        });
+    }
+
+    function cargarFechasModulos() {
+        if (typeof FECHAS_REF === 'undefined' || FECHAS_REF === null) return Promise.resolve({});
+        return FECHAS_REF.once('value').then(function(snapshot) {
+            fechasModulosCache = snapshot.val() || {};
+            return fechasModulosCache;
+        });
+    }
+
+    // ============================================
+    // FUNCIONES DE NOTAS Y ASISTENCIAS
+    // ============================================
+    function obtenerEstadoModulo(modulo) {
+        var data = fechasModulosCache[modulo] || { inicio: '', limite: '', bloqueado: false };
+        var ahora = new Date();
+        var fechaInicio = data.inicio ? new Date(data.inicio) : null;
+        var fechaLimite = data.limite ? new Date(data.limite) : null;
+        if (fechaLimite && fechaLimite < ahora) return 'cerrado';
+        if (fechaInicio && fechaInicio > ahora) return 'proximo';
+        return 'activo';
+    }
+
+    function puedeEditarModulo(modulo) {
+        return obtenerEstadoModulo(modulo) === 'activo';
+    }
+
+    function moduloTienePM(moduloData) {
+        if (!moduloData) return false;
+        var ec = moduloData.EC;
+        var ep = moduloData.EP;
+        var ed = moduloData.ED;
+        if (ec === null || ec === undefined || ec === '') return false;
+        if (ep === null || ep === undefined || ep === '') return false;
+        if (ed === null || ed === undefined || ed === '') return false;
+        return true;
+    }
+
+    function getEstadoModuloClase(modulo) {
+        var estado = obtenerEstadoModulo(modulo);
+        var clases = { 'activo': 'activo', 'proximo': 'proximo', 'cerrado': 'cerrado' };
+        return clases[estado] || '';
+    }
+
+    function getEstadoModuloTexto(modulo) {
+        var estado = obtenerEstadoModulo(modulo);
+        var textos = { 'activo': '🟢 Activo', 'proximo': '🟡 Próximo', 'cerrado': '🔴 Cerrado' };
+        return textos[estado] || '❓ Desconocido';
+    }
+
+    // ============================================
+    // CARGAR ALUMNOS CON EDICIÓN DE NOTAS
+    // ============================================
+    function cargarAlumnos() {
+        console.log('🔄 Cargando alumnos...');
+        
+        if (typeof USUARIOS_REF === 'undefined' || USUARIOS_REF === null) {
+            document.getElementById('alumnosList').innerHTML = '<div class="alert alert-danger">Error: Firebase no disponible</div>';
+            return;
+        }
+
+        cargarFechasModulos().then(function() {
+            var nivel = document.getElementById('nivelSelect').value;
+            var grado = document.getElementById('gradoSelect').value;
+            var seccion = document.getElementById('seccionSelect').value;
+            var modulos = getNombresModulos();
+
+            Promise.all([USUARIOS_REF.once('value'), NOTAS_REF.once('value')])
+                .then(function(resultados) {
+                    var usuariosSnap = resultados[0];
+                    var notasSnap = resultados[1];
+                    var usuarios = usuariosSnap.val() || [];
+                    var notas = notasSnap.val() || [];
+
+                    var alumnos = usuarios.filter(function(u) { 
+                        return u.rol === 'alumno' && u.nivel === nivel && u.grado === grado && u.seccion === seccion;
+                    });
+
+                    if (alumnos.length === 0) {
+                        document.getElementById('alumnosList').innerHTML = '<div class="alert alert-warning">No hay alumnos en ' + nivel + ' - ' + grado + ' "' + seccion + '"</div>';
+                        return;
+                    }
+
+                    var html = '<h5>Alumnos de ' + nivel + ' - ' + grado + ' "' + seccion + '"</h5>';
+                    html += '<div class="table-responsive"><table class="table table-hover table-docente"><thead class="table-light"><tr><th>Alumno</th>';
+
+                    ['I', 'II', 'III', 'IV'].forEach(function(mod) {
+                        html += '<th>' + (modulos[mod] || 'Módulo ' + mod) + '<br><span class="badge-estado-modulo ' + (getEstadoModuloClase(mod)) + '">' + (getEstadoModuloTexto(mod)) + '</span></th>';
+                    });
+
+                    html += '<th>Prom. Final</th></tr></thead><tbody>';
+
+                    alumnos.forEach(function(alumno) {
+                        var notasAlumno = notas.filter(function(n) { 
+                            return n.alumno_dni === alumno.dni && n.docente_dni === session.dni; 
+                        });
+
+                        var modulosData = { 'I': null, 'II': null, 'III': null, 'IV': null };
+                        notasAlumno.forEach(function(n) {
+                            modulosData[n.modulo] = n;
+                        });
+
+                        var mods = { 'I': '-', 'II': '-', 'III': '-', 'IV': '-' };
+                        var pmsPorModulo = {};
+
+                        ['I', 'II', 'III', 'IV'].forEach(function(mod) {
+                            var datos = modulosData[mod];
+                            var tienePM = moduloTienePM(datos);
+                            if (tienePM) {
+                                var ec = parseFloat(datos.EC) || 0;
+                                var ep = parseFloat(datos.EP) || 0;
+                                var ed = parseFloat(datos.ED) || 0;
+                                var pmCalculado = (ec + ep + ed) / 3;
+                                pmsPorModulo[mod] = pmCalculado;
+                                mods[mod] = redondearValor(pmCalculado);
+                            }
+                        });
+
+                        var modulosConPM = Object.keys(pmsPorModulo).length;
+                        var promedioFinal = '-';
+                        var claseColor = 'sin-nota';
+                        var textoMostrar = '-';
+
+                        if (modulosConPM === 4) {
+                            var pms = Object.values(pmsPorModulo);
+                            var suma = pms.reduce(function(a, b) { return a + b; }, 0);
+                            promedioFinal = redondearValor(suma / 4);
+                            claseColor = getColorClase(promedioFinal);
+                            textoMostrar = promedioFinal;
+                        } else if (modulosConPM > 0 && modulosConPM < 4) {
+                            textoMostrar = '⏳ ' + modulosConPM + '/4';
+                            claseColor = 'pendiente';
+                        }
+
+                        html += '<tr>';
+                        html += '<td><strong>' + (alumno.nombre || alumno.nombres || 'Alumno') + '</strong></td>';
+
+                        ['I', 'II', 'III', 'IV'].forEach(function(mod) {
+                            var puedeEditar = puedeEditarModulo(mod);
+                            var valorMostrar = mods[mod];
+                            var btnClass = 'btn-outline-primary';
+                            if (valorMostrar === '-') btnClass = 'btn-modulo-sin-nota';
+                            if (!puedeEditar) btnClass = 'btn-modulo-bloqueado';
+                            html += '<td><button class="btn btn-sm ' + btnClass + ' btn-accion" onclick="editarNotas(\'' + alumno.dni + '\',\'' + mod + '\',\'' + (alumno.nombre || alumno.nombres || 'Alumno') + '\')" ' + (!puedeEditar ? 'disabled' : '') + '>' + valorMostrar + '</button>' + (!puedeEditar ? '<br><small class="text-muted">' + (getEstadoModuloTexto(mod)) + '</small>' : '') + '</td>';
+                        });
+
+                        html += '<td><span class="badge badge-promedio ' + claseColor + '">' + textoMostrar + '</span></td></tr>';
+                    });
+
+                    html += '</tbody></table></div>';
+                    document.getElementById('alumnosList').innerHTML = html;
+                })
+                .catch(function(err) {
+                    document.getElementById('alumnosList').innerHTML = '<div class="alert alert-danger">Error al cargar alumnos: ' + err.message + '</div>';
+                });
+        });
+    }
+
+    // ============================================
+    // EDITAR NOTAS - FUNCIÓN COMPLETA
+    // ============================================
+    function editarNotas(alumnoDni, modulo, alumnoNombre) {
+        if (!puedeEditarModulo(modulo)) {
+            alert('❌ Este módulo no está disponible para edición.');
+            return;
+        }
+
+        console.log('✏️ Editando notas para:', alumnoDni, 'Módulo:', modulo);
+
+        document.getElementById('notasAlumnoDni').value = alumnoDni;
+        document.getElementById('notasModulo').value = modulo;
+        document.getElementById('modalNotasAlumno').textContent = alumnoNombre || 'Alumno';
+
+        var columnas = getNombreColumnas();
+        document.getElementById('notasLabelEC').textContent = columnas.EC || 'EC';
+        document.getElementById('notasLabelEP').textContent = columnas.EP || 'EP';
+        document.getElementById('notasLabelED').textContent = columnas.ED || 'ED';
+
+        var modulos = getNombresModulos();
+        document.getElementById('notasModuloLabel').textContent = modulos[modulo] || 'Módulo ' + modulo;
+        
+        var estadoModulo = obtenerEstadoModulo(modulo);
+        var estadoTexto = getEstadoModuloTexto(modulo);
+        var estadoClase = estadoModulo === 'activo' ? 'bg-success' : (estadoModulo === 'proximo' ? 'bg-warning' : 'bg-danger');
+        document.getElementById('notasEstadoModulo').textContent = estadoTexto;
+        document.getElementById('notasEstadoModulo').className = 'badge ' + estadoClase;
+
+        document.getElementById('notasInputEC').value = '';
+        document.getElementById('notasInputEP').value = '';
+        document.getElementById('notasInputED').value = '';
+        document.getElementById('notasPMCalculado').textContent = '-';
+        document.getElementById('notasPMCalculado').className = 'pm-calculado sin-nota';
+
+        NOTAS_REF.once('value').then(function(snapshot) {
+            var notas = snapshot.val() || [];
+            var notaExistente = null;
+            
+            for (var i = 0; i < notas.length; i++) {
+                var n = notas[i];
+                if (n.alumno_dni === alumnoDni && n.modulo === modulo && n.docente_dni === session.dni) {
+                    notaExistente = n;
+                    break;
+                }
+            }
+
+            if (notaExistente) {
+                document.getElementById('notasInputEC').value = (notaExistente.EC !== undefined && notaExistente.EC !== null) ? notaExistente.EC : '';
+                document.getElementById('notasInputEP').value = (notaExistente.EP !== undefined && notaExistente.EP !== null) ? notaExistente.EP : '';
+                document.getElementById('notasInputED').value = (notaExistente.ED !== undefined && notaExistente.ED !== null) ? notaExistente.ED : '';
+                if (moduloTienePM(notaExistente)) {
+                    var ec = parseFloat(notaExistente.EC) || 0;
+                    var ep = parseFloat(notaExistente.EP) || 0;
+                    var ed = parseFloat(notaExistente.ED) || 0;
+                    var pm = (ec + ep + ed) / 3;
+                    document.getElementById('notasPMCalculado').textContent = redondearValor(pm);
+                    document.getElementById('notasPMCalculado').className = 'pm-calculado';
+                }
+            }
+
+            document.getElementById('notasInputEC').addEventListener('input', calcularPMNotas);
+            document.getElementById('notasInputEP').addEventListener('input', calcularPMNotas);
+            document.getElementById('notasInputED').addEventListener('input', calcularPMNotas);
+
+            var modal = new bootstrap.Modal(document.getElementById('modalEditarNotas'));
+            modal.show();
+
+        }).catch(function(err) {
+            alert('❌ Error al cargar notas: ' + err.message);
+        });
+    }
+
+    function calcularPMNotas() {
+        var ec = parseFloat(document.getElementById('notasInputEC').value) || 0;
+        var ep = parseFloat(document.getElementById('notasInputEP').value) || 0;
+        var ed = parseFloat(document.getElementById('notasInputED').value) || 0;
+        
+        var pmEl = document.getElementById('notasPMCalculado');
+        
+        if (document.getElementById('notasInputEC').value !== '' && 
+            document.getElementById('notasInputEP').value !== '' && 
+            document.getElementById('notasInputED').value !== '') {
+            var pm = (ec + ep + ed) / 3;
+            pmEl.textContent = redondearValor(pm);
+            pmEl.className = 'pm-calculado';
+        } else {
+            pmEl.textContent = '-';
+            pmEl.className = 'pm-calculado sin-nota';
+        }
+    }
+
+    // ============================================
+    // GUARDAR NOTAS
+    // ============================================
+    document.getElementById('btnGuardarNotas').addEventListener('click', function() {
+        var alumnoDni = document.getElementById('notasAlumnoDni').value;
+        var modulo = document.getElementById('notasModulo').value;
+        var ec = document.getElementById('notasInputEC').value;
+        var ep = document.getElementById('notasInputEP').value;
+        var ed = document.getElementById('notasInputED').value;
+
+        if (!ec && !ep && !ed) {
+            alert('❌ Debes ingresar al menos una nota para guardar.');
+            return;
+        }
+
+        var notasValidas = true;
+        var valores = [ec, ep, ed];
+        var nombres = ['EC', 'EP', 'ED'];
+        for (var idx = 0; idx < valores.length; idx++) {
+            if (valores[idx] !== '' && (isNaN(parseFloat(valores[idx])) || parseFloat(valores[idx]) < 0 || parseFloat(valores[idx]) > 20)) {
+                notasValidas = false;
+                alert('❌ La nota ' + nombres[idx] + ' debe ser un número entre 0 y 20.');
+                break;
+            }
+        }
+        if (!notasValidas) return;
+
+        USUARIOS_REF.once('value').then(function(snap) {
+            var usuarios = snap.val() || [];
+            var alumno = usuarios.find(function(u) { return u.dni === alumnoDni; });
+            var alumnoNombre = alumno ? (alumno.nombre || alumno.nombres || 'Alumno') : 'Alumno';
+
+            var notaData = {
+                alumno_dni: alumnoDni,
+                alumno_nombre: alumnoNombre,
+                docente_dni: session.dni,
+                docente_nombre: session.nombre || 'Docente',
+                modulo: modulo,
+                materia: session.materias && session.materias.length > 0 ? session.materias[0] : 'Sin materia',
+                EC: ec !== '' ? parseFloat(ec) : null,
+                EP: ep !== '' ? parseFloat(ep) : null,
+                ED: ed !== '' ? parseFloat(ed) : null,
+                PM: null,
+                fecha_actualizacion: new Date().toISOString()
+            };
+
+            if (ec !== '' && ep !== '' && ed !== '') {
+                var pm = (parseFloat(ec) + parseFloat(ep) + parseFloat(ed)) / 3;
+                notaData.PM = pm;
+            }
+
+            NOTAS_REF.once('value').then(function(snapshot) {
+                var notas = snapshot.val() || [];
+                var index = -1;
+                
+                for (var i = 0; i < notas.length; i++) {
+                    var n = notas[i];
+                    if (n.alumno_dni === alumnoDni && n.modulo === modulo && n.docente_dni === session.dni) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index !== -1) {
+                    notas[index] = { ...notas[index], ...notaData };
+                    mostrarToast('✅ Notas actualizadas correctamente para ' + alumnoNombre, 'success');
+                } else {
+                    notaData.fecha_creacion = new Date().toISOString();
+                    notas.push(notaData);
+                    mostrarToast('✅ Notas guardadas correctamente para ' + alumnoNombre, 'success');
+                }
+
+                NOTAS_REF.set(notas).then(function() {
+                    if (typeof window.AUDITORIA !== 'undefined' && window.AUDITORIA.registrar) {
+                        window.AUDITORIA.registrar(
+                            'edicion_notas',
+                            'media',
+                            session.dni,
+                            'Notas editadas para ' + alumnoNombre + ' - Módulo ' + modulo,
+                            { alumno: alumnoDni, modulo: modulo }
+                        );
+                    }
+                    
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarNotas'));
+                    if (modal) modal.hide();
+                    cargarAlumnos();
+                }).catch(function(err) {
+                    alert('❌ Error al guardar notas: ' + err.message);
+                });
+            }).catch(function(err) {
+                alert('❌ Error al buscar notas: ' + err.message);
+            });
+        }).catch(function(err) {
+            alert('❌ Error al obtener datos del alumno: ' + err.message);
+        });
+    });
+
+    // ============================================
+    // REGISTRAR ASISTENCIA
+    // ============================================
+    function cargarAsistencias() {
+        if (typeof USUARIOS_REF === 'undefined' || USUARIOS_REF === null || typeof ASISTENCIAS_REF === 'undefined' || ASISTENCIAS_REF === null) {
+            document.getElementById('attendanceList').innerHTML = '<div class="alert alert-danger">Error: Firebase no disponible</div>';
+            return;
+        }
+
+        var nivel = document.getElementById('nivelSelect').value;
+        var grado = document.getElementById('gradoSelect').value;
+        var seccion = document.getElementById('seccionSelect').value;
+        
+        Promise.all([USUARIOS_REF.once('value'), ASISTENCIAS_REF.once('value')])
+            .then(function(data) {
+                var usuarios = data[0].val() || [];
+                var asistencias = data[1].val() || [];
+                var alumnos = usuarios.filter(function(u) { return u.rol === 'alumno' && u.nivel === nivel && u.grado === grado && u.seccion === seccion; });
+                
+                if (alumnos.length === 0) {
+                    document.getElementById('attendanceList').innerHTML = '<div class="alert alert-warning">No hay alumnos en ' + nivel + ' - ' + grado + ' "' + seccion + '"</div>';
+                    return;
+                }
+                
+                var hoy = new Date().toDateString();
+                var html = '<h5>Registro de Asistencias - ' + nivel + ' - ' + grado + ' "' + seccion + '"</h5><div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Alumno</th><th>Estado</th><th>Fecha</th><th>Acción</th></tr></thead><tbody>';
+                
+                alumnos.forEach(function(alumno) {
+                    var asistenciaHoy = asistencias.find(function(a) { return a.alumno_dni === alumno.dni && new Date(a.fecha).toDateString() === hoy && a.docente_dni === session.dni; });
+                    var estado = asistenciaHoy && asistenciaHoy.estado ? asistenciaHoy.estado : '';
+                    var fecha = asistenciaHoy ? new Date(asistenciaHoy.fecha).toLocaleDateString() : '-';
+                    var rowClass = estado === 'asistio' ? 'asistio' : estado === 'tardanza' ? 'tardanza' : estado === 'no_vino' ? 'no_vino' : '';
+                    
+                    html += '<tr class="' + rowClass + '"><td><strong>' + alumno.nombre + '</strong></td><td><select class="form-control form-control-sm" id="estado_' + alumno.dni + '"><option value="asistio" ' + (estado === 'asistio' ? 'selected' : '') + '>✅ Asistió</option><option value="tardanza" ' + (estado === 'tardanza' ? 'selected' : '') + '>⏰ Tardanza</option><option value="no_vino" ' + (estado === 'no_vino' ? 'selected' : '') + '>❌ No vino</option></select></td><td>' + fecha + '</td><td><button class="btn btn-sm btn-primary btn-accion" onclick="registrarAsistencia(\'' + alumno.dni + '\')"><i class="bi bi-check-circle"></i> Registrar</button></td></tr>';
+                });
+                
+                html += '</tbody></table></div>';
+                document.getElementById('attendanceList').innerHTML = html;
+            })
+            .catch(function(err) {
+                document.getElementById('attendanceList').innerHTML = '<div class="alert alert-danger">Error al cargar asistencias: ' + err.message + '</div>';
+            });
+    }
+
+    function registrarAsistencia(alumnoDni) {
+        if (typeof ASISTENCIAS_REF === 'undefined' || ASISTENCIAS_REF === null) {
+            alert('❌ Error de conexión.');
+            return;
+        }
+
+        var estado = document.getElementById('estado_' + alumnoDni).value;
+        var materiaDocente = (session.materias && session.materias.length > 0) ? session.materias[0] : 'Sin materia';
+        
+        ASISTENCIAS_REF.once('value').then(function(snapshot) {
+            var asistencias = snapshot.val() || [];
+            var hoy = new Date();
+            var hoyStr = hoy.toISOString();
+            
+            var existe = asistencias.some(function(a) { return a.alumno_dni === alumnoDni && a.docente_dni === session.dni && new Date(a.fecha).toDateString() === hoy.toDateString(); });
+            
+            if (existe) {
+                var index = asistencias.findIndex(function(a) { return a.alumno_dni === alumnoDni && a.docente_dni === session.dni && new Date(a.fecha).toDateString() === hoy.toDateString(); });
+                if (index !== -1) {
+                    asistencias[index].estado = estado;
+                    asistencias[index].fecha = hoyStr;
+                    asistencias[index].materia = materiaDocente;
+                }
+            } else {
+                var nueva = {
+                    alumno_dni: alumnoDni,
+                    docente_dni: session.dni,
+                    fecha: hoyStr,
+                    estado: estado,
+                    nivel: document.getElementById('nivelSelect').value,
+                    grado: document.getElementById('gradoSelect').value,
+                    seccion: document.getElementById('seccionSelect').value,
+                    materia: materiaDocente
+                };
+                asistencias.push(nueva);
+            }
+            
+            ASISTENCIAS_REF.set(asistencias);
+            mostrarToast('✅ Asistencia registrada correctamente');
+            cargarAsistencias();
+        }).catch(function(err) {
+            alert('❌ Error al registrar asistencia: ' + err.message);
+        });
+    }
+</script>
+<script>
+    // ============================================
+    // FUNCIONES PARA EXÁMENES
+    // ============================================
+    function cargarExamenesDocente() {
+        if (typeof EXAMENES_REF === 'undefined' || EXAMENES_REF === null) {
+            document.getElementById('listaExamenesDocente').innerHTML = '<div class="alert alert-danger">Error: Firebase no disponible</div>';
+            return;
+        }
+
+        EXAMENES_REF.orderByChild('docente_dni').equalTo(session.dni).once('value')
+            .then(function(snap) {
+                var data = snap.val() || {};
+                var examenes = Object.values(data);
+                examenesCache = examenes;
+                var html = '';
+                if (examenes.length === 0) {
+                    html = '<div class="alert alert-info">No has creado exámenes aún.</div>';
+                } else {
+                    examenes.sort(function(a, b) { return new Date(b.fecha_creacion) - new Date(a.fecha_creacion); });
+                    examenes.forEach(function(e) {
+                        var fechaMostrar = e.fecha_examen ? e.fecha_examen.split('-').reverse().join('/') : 'Sin fecha';
+                        html += '<div class="examen-card-docente"><div class="d-flex justify-content-between align-items-start"><div class="flex-grow-1"><div class="examen-titulo">' + (e.titulo || 'Sin título') + '</div><div class="examen-info">📚 ' + (e.materia || 'Sin materia') + ' | ' + (e.nivel || '') + ' ' + (e.grado || '') + ' "' + (e.seccion || '') + '" | 📅 ' + fechaMostrar + ' 🕐 ' + (e.hora_inicio || '--:--') + ' ⏱️ ' + (e.duracion || 0) + ' min</div><div class="mt-2"><span class="examen-estado ' + (e.activo ? 'activo' : 'cerrado') + '">' + (e.activo ? '🟢 Activo' : '🔴 Cerrado') + '</span></div></div><div class="ms-3"><button class="btn btn-sm btn-warning" onclick="editarExamenDocente(\'' + e.id + '\')"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="eliminarExamenDocente(\'' + e.id + '\')"><i class="bi bi-trash"></i></button></div></div></div>';
+                    });
+                }
+                document.getElementById('listaExamenesDocente').innerHTML = html;
+            })
+            .catch(function(err) {
+                document.getElementById('listaExamenesDocente').innerHTML = '<div class="alert alert-danger">Error al cargar exámenes: ' + err.message + '</div>';
+            });
+    }
+
+    function mostrarFormularioExamenDocente(examen) {
+        var modal = new bootstrap.Modal(document.getElementById('modalExamenDocente'));
+        document.getElementById('modalExamenTitulo').textContent = examen ? 'Editar Examen' : 'Crear Examen';
+        document.getElementById('examenEditId').value = examen && examen.id ? examen.id : '';
+
+        var materiaSelect = document.getElementById('exMateriaDocente');
+        materiaSelect.innerHTML = '<option value="">Seleccione</option>';
+        (session.materias || []).forEach(function(m) {
+            materiaSelect.innerHTML += '<option value="' + m + '">' + m + '</option>';
+        });
+
+        document.getElementById('preguntasContainerDocente').innerHTML = '';
+        contadorPreguntasDocente = 0;
+        document.getElementById('importWordStatus').innerHTML = '';
+        document.getElementById('inputWordExamen').value = '';
+
+        if (examen) {
+            document.getElementById('exTituloDocente').value = examen.titulo || '';
+            document.getElementById('exMateriaDocente').value = examen.materia || '';
+            document.getElementById('exNivelDocente').value = examen.nivel || 'Secundaria';
+            document.getElementById('exGradoDocente').value = examen.grado || 'Tercero';
+            document.getElementById('exSeccionDocente').value = examen.seccion || 'A';
+            document.getElementById('exFechaDocente').value = examen.fecha_examen || '';
+            fijarHoraDocenteDesde24h(examen.hora_inicio || '08:00');
+            document.getElementById('exDuracionDocente').value = examen.duracion || 30;
+            (examen.preguntas || []).forEach(function(p) { agregarPreguntaDocente(p); });
+        } else {
+            document.getElementById('exTituloDocente').value = '';
+            document.getElementById('exMateriaDocente').value = '';
+            document.getElementById('exNivelDocente').value = 'Secundaria';
+            document.getElementById('exGradoDocente').value = 'Tercero';
+            document.getElementById('exSeccionDocente').value = 'A';
+            document.getElementById('exFechaDocente').value = '';
+            fijarHoraDocenteDesde24h('08:00');
+            document.getElementById('exDuracionDocente').value = 30;
+            agregarPreguntaDocente();
+        }
+
+        modal.show();
+    }
+
+    var contadorPreguntasDocente = 0;
+
+    // ============================================
+    // SELECTOR DE HORA (12h con AM/PM) PARA EXAMEN
+    // ============================================
+    function inicializarSelectsHoraDocente() {
+        var selHora = document.getElementById('exHoraDocenteHora');
+        var selMinuto = document.getElementById('exHoraDocenteMinuto');
+        if (selHora.options.length === 0) {
+            for (var h = 1; h <= 12; h++) {
+                selHora.innerHTML += '<option value="' + h + '">' + h + '</option>';
+            }
+        }
+        if (selMinuto.options.length === 0) {
+            for (var m = 0; m <= 59; m++) {
+                var mm = String(m).padStart(2, '0');
+                selMinuto.innerHTML += '<option value="' + mm + '">' + mm + '</option>';
+            }
+        }
+    }
+
+    function fijarHoraDocenteDesde24h(hora24) {
+        inicializarSelectsHoraDocente();
+        var partes = (hora24 || '08:00').split(':');
+        var h24 = parseInt(partes[0], 10);
+        var min = partes[1] || '00';
+        var ampm = h24 >= 12 ? 'PM' : 'AM';
+        var h12 = h24 % 12;
+        if (h12 === 0) h12 = 12;
+
+        document.getElementById('exHoraDocenteHora').value = String(h12);
+        document.getElementById('exHoraDocenteMinuto').value = min;
+        document.getElementById('exHoraDocenteAmPm').value = ampm;
+        document.getElementById('exHoraDocente').value = hora24;
+    }
+
+    function actualizarHoraDocenteDesdeSelects() {
+        var h12 = parseInt(document.getElementById('exHoraDocenteHora').value, 10);
+        var min = document.getElementById('exHoraDocenteMinuto').value;
+        var ampm = document.getElementById('exHoraDocenteAmPm').value;
+
+        var h24 = h12 % 12;
+        if (ampm === 'PM') h24 += 12;
+
+        document.getElementById('exHoraDocente').value = String(h24).padStart(2, '0') + ':' + min;
+    }
+
+    function renumerarPreguntasDocente() {
+        document.querySelectorAll('#preguntasContainerDocente .pregunta-item').forEach(function(item, idx) {
+            var label = item.querySelector('.pregunta-numero');
+            if (label) label.textContent = 'Pregunta ' + (idx + 1);
+        });
+    }
+
+    function agregarPreguntaDocente(datosPregunta) {
+        var idx = contadorPreguntasDocente++;
+        var opciones = (datosPregunta && datosPregunta.opciones && datosPregunta.opciones.length >= 2)
+            ? datosPregunta.opciones
+            : ['', '', '', ''];
+        var respuestaGuardada = (datosPregunta && datosPregunta.respuesta !== undefined && datosPregunta.respuesta !== null)
+            ? datosPregunta.respuesta
+            : null;
+        var textoGuardado = (datosPregunta && datosPregunta.texto) ? datosPregunta.texto : '';
+        var letras = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+        var opcionesHtml = opciones.map(function(op, i) {
+            return '<div class="col-6"><div class="opcion-item"><span class="letra">' + (letras[i] || (i + 1)) + ')</span>' +
+                '<input type="text" class="form-control form-control-sm opcion-input" placeholder="Opción ' + (letras[i] || (i + 1)) + '" value="' + escaparHtmlAttr(op) + '" required></div></div>';
+        }).join('');
+
+        var opcionesSelectHtml = opciones.map(function(op, i) {
+            var seleccionado = (respuestaGuardada === i) ? 'selected' : '';
+            return '<option value="' + i + '" ' + seleccionado + '>' + (letras[i] || (i + 1)) + '</option>';
+        }).join('');
+
+        var div = document.createElement('div');
+        div.className = 'pregunta-item';
+        div.setAttribute('data-index', idx);
+        div.innerHTML =
+            '<span class="pregunta-numero">Pregunta</span>' +
+            '<div class="row"><div class="col-12"><div class="mb-2">' +
+            '<input type="text" class="form-control pregunta-texto" placeholder="Escribe la pregunta..." value="' + escaparHtmlAttr(textoGuardado) + '" required>' +
+            '</div></div></div>' +
+            '<div class="row">' + opcionesHtml + '</div>' +
+            '<div class="row mt-2">' +
+            '<div class="col-6"><label class="form-label">Respuesta Correcta</label>' +
+            '<select class="form-control respuesta-correcta"><option value="">Seleccione...</option>' + opcionesSelectHtml + '</select></div>' +
+            '<div class="col-6 d-flex align-items-end"><button type="button" class="btn btn-danger btn-sm" onclick="eliminarPreguntaDocente(this)"><i class="bi bi-trash"></i> Eliminar</button></div>' +
+            '</div>';
+
+        document.getElementById('preguntasContainerDocente').appendChild(div);
+        renumerarPreguntasDocente();
+    }
+
+    function escaparHtmlAttr(texto) {
+        return String(texto === undefined || texto === null ? '' : texto)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function eliminarPreguntaDocente(btn) {
+        var item = btn.closest('.pregunta-item');
+        if (document.querySelectorAll('.pregunta-item').length <= 1) {
+            alert('Debe haber al menos una pregunta.');
+            return;
+        }
+        if (confirm('¿Eliminar esta pregunta?')) {
+            item.remove();
+            renumerarPreguntasDocente();
+        }
+    }
+
+    function guardarExamenDocente() {
+        var titulo = document.getElementById('exTituloDocente').value.trim();
+        var materia = document.getElementById('exMateriaDocente').value;
+        var nivel = document.getElementById('exNivelDocente').value;
+        var grado = document.getElementById('exGradoDocente').value;
+        var seccion = document.getElementById('exSeccionDocente').value;
+        var fecha = document.getElementById('exFechaDocente').value;
+        var hora = document.getElementById('exHoraDocente').value;
+        var duracion = parseInt(document.getElementById('exDuracionDocente').value) || 30;
+        var editId = document.getElementById('examenEditId').value;
+
+        if (!titulo) { alert('❌ Ingresa el título del examen.'); return; }
+        if (!materia) { alert('❌ Selecciona la materia.'); return; }
+        if (!fecha) { alert('❌ Selecciona la fecha del examen.'); return; }
+
+        var items = document.querySelectorAll('#preguntasContainerDocente .pregunta-item');
+        if (items.length === 0) { alert('❌ Agrega al menos una pregunta.'); return; }
+
+        var preguntas = [];
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var texto = item.querySelector('.pregunta-texto').value.trim();
+            if (!texto) { alert('❌ La pregunta ' + (i + 1) + ' no tiene texto.'); return; }
+
+            var opcionInputs = item.querySelectorAll('.opcion-input');
+            var opciones = [];
+            for (var j = 0; j < opcionInputs.length; j++) {
+                var val = opcionInputs[j].value.trim();
+                if (!val) { alert('❌ La opción ' + (j + 1) + ' de la pregunta ' + (i + 1) + ' está vacía.'); return; }
+                opciones.push(val);
+            }
+
+            var respuestaSel = item.querySelector('.respuesta-correcta').value;
+            if (respuestaSel === '') { alert('❌ Selecciona la respuesta correcta de la pregunta ' + (i + 1) + '.'); return; }
+
+            preguntas.push({ texto: texto, opciones: opciones, respuesta: parseInt(respuestaSel) });
+        }
+
+        var btn = document.getElementById('btnGuardarExamen');
+        var textoOriginalBtn = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
+
+        var procesar = function() {
+            if (editId) {
+                EXAMENES_REF.orderByChild('id').equalTo(editId).once('value').then(function(snap) {
+                    var data = snap.val() || {};
+                    var keys = Object.keys(data);
+                    if (keys.length === 0) { throw new Error('Examen no encontrado.'); }
+                    var examenPrevio = data[keys[0]];
+                    var actualizado = {
+                        titulo: titulo, materia: materia, nivel: nivel, grado: grado, seccion: seccion,
+                        fecha_examen: fecha, hora_inicio: hora, duracion: duracion, preguntas: preguntas
+                    };
+                    return EXAMENES_REF.child(keys[0]).update(actualizado);
+                });
+            } else {
+                var nuevoExamen = {
+                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    titulo: titulo, materia: materia, nivel: nivel, grado: grado, seccion: seccion,
+                    fecha_examen: fecha, hora_inicio: hora, duracion: duracion,
+                    docente_dni: session.dni, docente_nombre: session.nombre || 'Docente',
+                    preguntas: preguntas, activo: true,
+                    fecha_creacion: new Date().toISOString(),
+                    resultados: []
+                };
+                return EXAMENES_REF.push(nuevoExamen);
+            }
+        };
+
+        Promise.resolve().then(procesar).then(function() {
+            mostrarToast('✅ Examen guardado correctamente.');
+            var modal = bootstrap.Modal.getInstance(document.getElementById('modalExamenDocente'));
+            if (modal) modal.hide();
+            cargarExamenesDocente();
+        }).catch(function(err) {
+            alert('❌ Error al guardar el examen: ' + err.message);
+        }).finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = textoOriginalBtn;
+        });
+    }
+
+    // ============================================
+    // IMPORTAR PREGUNTAS DESDE WORD (.docx)
+    // ============================================
+    function parsearPreguntasDeTexto(texto) {
+        var lineas = texto.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(function(l) { return l !== ''; });
+        var preguntas = [];
+        var actual = null;
+        var rePregunta = /^(\d+)[\.\)]\s*(.+)/;
+        var reOpcion = /^([a-eA-E])[\.\)]\s*(.+)/;
+
+        lineas.forEach(function(linea) {
+            var mPregunta = linea.match(rePregunta);
+            var mOpcion = linea.match(reOpcion);
+            if (mPregunta) {
+                if (actual && actual.texto) preguntas.push(actual);
+                actual = { texto: mPregunta[2].trim(), opciones: [], respuesta: null };
+            } else if (mOpcion && actual) {
+                actual.opciones.push(mOpcion[2].trim());
+            } else if (actual && actual.opciones.length === 0) {
+                // Línea adicional antes de las opciones: se concatena al texto de la pregunta
+                actual.texto += ' ' + linea;
+            }
+        });
+        if (actual && actual.texto) preguntas.push(actual);
+
+        return preguntas.filter(function(p) { return p.texto && p.opciones.length >= 2; });
+    }
+
+    document.getElementById('inputWordExamen').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        var statusEl = document.getElementById('importWordStatus');
+        if (!file) return;
+
+        if (typeof mammoth === 'undefined') {
+            statusEl.innerHTML = '<div class="alert alert-danger py-2 mb-0">❌ No se pudo cargar el lector de Word. Verifica tu conexión a internet.</div>';
+            return;
+        }
+
+        statusEl.innerHTML = '<div class="alert alert-info py-2 mb-0"><i class="bi bi-hourglass-split"></i> Leyendo documento...</div>';
+
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            mammoth.extractRawText({ arrayBuffer: event.target.result }).then(function(resultado) {
+                var preguntasImportadas = parsearPreguntasDeTexto(resultado.value);
+                if (preguntasImportadas.length === 0) {
+                    statusEl.innerHTML = '<div class="alert alert-warning py-2 mb-0">⚠️ No se detectaron preguntas con el formato esperado. Revisa el ejemplo de formato arriba.</div>';
+                    return;
+                }
+                preguntasImportadas.forEach(function(p) { agregarPreguntaDocente(p); });
+                statusEl.innerHTML = '<div class="alert alert-success py-2 mb-0">✅ ' + preguntasImportadas.length + ' pregunta(s) importada(s). No olvides seleccionar la respuesta correcta de cada una antes de guardar.</div>';
+                document.getElementById('inputWordExamen').value = '';
+            }).catch(function(err) {
+                statusEl.innerHTML = '<div class="alert alert-danger py-2 mb-0">❌ Error al leer el Word: ' + err.message + '</div>';
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+
+    function editarExamenDocente(examenId) {
+        var examen = examenesCache.find(function(e) { return e.id === examenId; });
+        if (examen) mostrarFormularioExamenDocente(examen);
+        else alert('❌ Examen no encontrado.');
+    }
+
+    function eliminarExamenDocente(examenId) {
+        if (!confirm('¿Eliminar este examen definitivamente?')) return;
+        if (typeof EXAMENES_REF === 'undefined' || EXAMENES_REF === null) {
+            alert('❌ Error de conexión.');
+            return;
+        }
+        EXAMENES_REF.orderByChild('id').equalTo(examenId).once('value')
+            .then(function(snap) {
+                var data = snap.val() || {};
+                var keys = Object.keys(data);
+                if (keys.length === 0) {
+                    alert('❌ Examen no encontrada.');
+                    return;
+                }
+                EXAMENES_REF.child(keys[0]).remove()
+                    .then(function() {
+                        mostrarToast('🗑️ Examen eliminado.');
+                        cargarExamenesDocente();
+                    })
+                    .catch(function(err) {
+                        alert('❌ Error al eliminar: ' + err.message);
+                    });
+            })
+            .catch(function(err) {
+                alert('❌ Error al buscar examen: ' + err.message);
+            });
+    }
+
+    // ============================================
+    // FUNCIONES PARA DESCARGAR ARCHIVOS
+    // ============================================
+    function descargarArchivoAlumno(archivoData, nombreArchivo) {
+        console.log('📥 Intentando descargar archivo del alumno:', nombreArchivo);
+        
+        if (!archivoData) {
+            mostrarToast('❌ No hay archivo adjunto para descargar.', 'error');
+            return;
+        }
+
+        if (archivoData.startsWith('http://') || archivoData.startsWith('https://')) {
+            window.open(archivoData, '_blank');
+            mostrarToast('✅ Abriendo enlace: ' + nombreArchivo, 'success');
+            return;
+        }
+
+        if (archivoData.startsWith('data:')) {
+            try {
+                var link = document.createElement('a');
+                link.href = archivoData;
+                link.download = nombreArchivo || 'archivo';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                mostrarToast('✅ Descargando: ' + (nombreArchivo || 'archivo'), 'success');
+                return;
+            } catch (error) {
+                console.error('Error al descargar:', error);
+                mostrarToast('❌ Error al descargar el archivo.', 'error');
+                return;
+            }
+        }
+
+        if (archivoData.startsWith('📎')) {
+            var match = archivoData.match(/📎\s*(.+?)\s*\((.+?)\)/);
+            if (match) {
+                var nombre = match[1];
+                var tamaño = match[2];
+                mostrarToast('⚠️ El archivo "' + nombre + '" (' + tamaño + ') fue subido por el alumno pero NO está disponible para descarga directa.\n\nMotivo: El archivo solo fue referenciado, no se guardaron los datos reales.\n\nSolución: Pídele al alumno que vuelva a subir el archivo correctamente.', 'warning');
+            } else {
+                mostrarToast('⚠️ El archivo fue referenciado pero no se puede descargar. Pídele al alumno que lo vuelva a subir.', 'warning');
+            }
+            return;
+        }
+
+        if (archivoData && !archivoData.startsWith('data:') && !archivoData.startsWith('http')) {
+            mostrarToast('📂 Archivo referenciado: "' + archivoData + '". No se puede descargar. Pídele al alumno que lo vuelva a subir.', 'warning');
+            return;
+        }
+
+        mostrarToast('❌ Formato de archivo no reconocido.', 'error');
+    }
+
+    function verArchivoBase64(base64Data, nombreArchivo) {
+        try {
+            if (!base64Data || !base64Data.startsWith('data:')) {
+                mostrarToast('❌ El formato del archivo no es válido.', 'error');
+                return;
+            }
+            var mimeMatch = base64Data.match(/^data:(.+?);/);
+            var mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+
+            if (mimeType.startsWith('image/') || mimeType === 'application/pdf') {
+                var ventana = window.open('', '_blank');
+                if (ventana) {
+                    ventana.document.write(`
+                        <html>
+                            <head>
+                                <title>${nombreArchivo || 'Archivo'}</title>
+                                <style>
+                                    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+                                    ${mimeType.startsWith('image/') ? 'img { max-width: 90%; max-height: 90%; object-fit: contain; }' : 'embed { width: 100%; height: 100%; }'}
+                                </style>
+                            </head>
+                            <body>
+                                ${mimeType.startsWith('image/') ? '<img src="' + base64Data + '" alt="' + nombreArchivo + '">' : '<embed src="' + base64Data + '" type="' + mimeType + '">'}
+                            </body>
+                        </html>
+                    `);
+                    ventana.document.close();
+                } else {
+                    descargarArchivoAlumno(base64Data, nombreArchivo);
+                }
+            } else {
+                descargarArchivoAlumno(base64Data, nombreArchivo);
+            }
+        } catch (error) {
+            console.error('Error al ver archivo:', error);
+            descargarArchivoAlumno(base64Data, nombreArchivo);
+        }
+    }
+
+    function copiarAlPortapapeles(texto) {
+        if (!texto) {
+            mostrarToast('❌ No hay texto para copiar.', 'error');
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto)
+                .then(function() { mostrarToast('✅ Enlace copiado al portapapeles.', 'success'); })
+                .catch(function() { copiarTextoFallback(texto); });
+        } else {
+            copiarTextoFallback(texto);
+        }
+    }
+
+    function copiarTextoFallback(texto) {
+        var textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            mostrarToast('✅ Enlace copiado al portapapeles.', 'success');
+        } catch (err) {
+            mostrarToast('❌ No se pudo copiar el enlace.', 'error');
+        }
+        document.body.removeChild(textarea);
+    }
+
+    // ============================================
+    // EVENTOS
+    // ============================================
+    document.getElementById('btnCargarAlumnos').addEventListener('click', cargarAlumnos);
+    document.getElementById('btnCrearExamen').addEventListener('click', function() { mostrarFormularioExamenDocente(null); });
+    document.getElementById('btnGuardarExamen').addEventListener('click', guardarExamenDocente);
+    document.getElementById('btnAgregarPregunta').addEventListener('click', agregarPreguntaDocente);
+
+    document.getElementById('grades-tab').addEventListener('click', cargarAlumnos);
+    document.getElementById('attendance-tab').addEventListener('click', cargarAsistencias);
+    document.getElementById('examenes-tab').addEventListener('click', cargarExamenesDocente);
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        sessionStorage.removeItem('session');
+        window.location.href = 'index.html';
+    });
+
+    // ============================================
+    // INICIALIZAR
+    // ============================================
+    window.onload = function() {
+        console.log('🔄 Iniciando Docente...');
+        
+        if (typeof USUARIOS_REF === 'undefined' || USUARIOS_REF === null) {
+            document.getElementById('alumnosList').innerHTML = '<div class="alert alert-danger">Error: Firebase no está disponible</div>';
+            return;
+        }
+
+        Promise.all([cargarNombreColumnas(), cargarNombresModulos(), cargarFechasModulos()])
+            .then(function() {
+                console.log('✅ Configuraciones cargadas correctamente');
+                setTimeout(function() {
+                    cargarAlumnos();
+                    cargarAsistencias();
+                    cargarTareasDocente();
+                    cargarExamenesDocente();
+                }, 300);
+                console.log('✅ Docente iniciado correctamente');
+            })
+            .catch(function(err) {
+                console.error('❌ Error al cargar configuraciones:', err);
+                cargarAlumnos();
+                cargarAsistencias();
+                cargarTareasDocente();
+                cargarExamenesDocente();
+            });
+    };
+
+    console.log('✅ Script de docente cargado completamente');
+</script>
+</body>
+</html>
